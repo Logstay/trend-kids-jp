@@ -350,3 +350,37 @@ button { font: inherit; }
   .empty--landing .empty__mark { width: 72%; right: -30%; bottom: -24%; opacity: 0.24; }
   .empty--landing::before { display: none; }
 }
+
+/* ---------- Sacola e checkout ---------- */
+.icon-btn--cart { position: relative; }
+.cart-badge {
+  position: absolute; top: -4px; right: -4px; min-width: 20px; height: 20px; padding: 0 6px; border-radius: var(--radius-pill);
+  background: var(--rosa-escuro); color: var(--branco); font-size: 12px; font-weight: 800; line-height: 20px; text-align: center;
+}
+.product__bag:disabled { opacity: 0.45; cursor: not-allowed; }
+.product__new--out { background: var(--tinta-suave); color: var(--branco); }
+.cart { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 32px; align-items: start; }
+.cart__items { display: grid; gap: 16px; }
+.cart-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; gap: 16px; align-items: center; padding-block: 16px; border-top: 2px solid var(--rosa-claro); }
+.cart-row:first-child { border-top: 0; }
+.cart-row__total { font-family: var(--font-display); font-weight: 600; font-size: 20px; min-width: 7ch; text-align: right; }
+.qty { display: inline-flex; align-items: center; gap: 4px; background: var(--branco); border-radius: var(--radius-pill); padding: 4px; }
+.qty__btn {
+  width: 44px; height: 44px; border: 0; border-radius: var(--radius-pill); cursor: pointer; font: inherit; font-size: 20px; font-weight: 800;
+  background: var(--rosa-claro); color: var(--rosa-escuro);
+}
+.qty__btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.qty__btn:focus-visible, .link-btn:focus-visible { outline: 3px solid var(--azul-escuro); outline-offset: 2px; }
+.qty__n { min-width: 2.5ch; text-align: center; font-weight: 800; }
+.link-btn { background: none; border: 0; padding: 12px 4px; min-height: 44px; cursor: pointer; font: inherit; font-weight: 700; color: var(--rosa-escuro); text-decoration: underline; }
+.confirm { max-width: 720px; justify-items: start; }
+.confirm .admin-list, .confirm .hero__ctas { width: 100%; }
+.confirm__code { font-family: var(--font-display); font-size: 1.4em; letter-spacing: 0.04em; user-select: all; color: var(--tinta); }
+.confirm__row { display: flex; justify-content: space-between; gap: 16px; padding-block: 12px; border-top: 2px solid var(--rosa-claro); font-weight: 600; }
+.confirm__row:first-child { border-top: 0; }
+.confirm__total { margin: 0; font-size: 20px; }
+@media (max-width: 860px) {
+  .cart { grid-template-columns: 1fr; }
+  .cart-row { grid-template-columns: 1fr auto; }
+  .cart-row__total { text-align: left; }
+}

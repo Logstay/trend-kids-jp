@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { CartProvider } from "@/components/cart/CartProvider";
 import { site } from "@/lib/site";
 // Fontes servidas pelo próprio site (sem depender do Google Fonts em runtime nem no build).
 import "@fontsource/fraunces/latin-600.css";
@@ -19,7 +20,9 @@ export const viewport: Viewport = { themeColor: "#F0357C" };
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR">
-      <body>{children}</body>
+      <body>
+        <CartProvider>{children}</CartProvider>
+      </body>
     </html>
   );
 }

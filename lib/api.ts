@@ -16,6 +16,19 @@ export type ApiProduct = {
   created_at: string;
 };
 
+/** Pedido como a API devolve (POST /v1/orders). Dinheiro em centavos; sem telefone. */
+export type ApiOrder = {
+  code: string;
+  status: string;
+  customer_name: string;
+  neighborhood: string;
+  items: { product_id: string; name: string; unit_price_cents: number; quantity: number; total_cents: number }[];
+  subtotal_cents: number;
+  shipping_cents: number;
+  total_cents: number;
+  created_at: string;
+};
+
 export type ProductFilter = {
   category?: string;
   q?: string;
@@ -33,8 +46,11 @@ export function formatPrice(cents: number): string {
 export function toProduct(p: ApiProduct): Product {
   const ageDays = (Date.now() - new Date(p.created_at).getTime()) / 86_400_000;
   return {
+    id: p.id,
     name: p.name,
     slug: p.slug,
+    stock: p.stock,
+    priceCents: p.price_cents,
     category: p.category,
     price: formatPrice(p.price_cents),
     isNew: ageDays <= NEW_DAYS,

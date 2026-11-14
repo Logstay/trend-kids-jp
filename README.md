@@ -24,6 +24,16 @@ NEXT_PUBLIC_API_URL=http://localhost:8080   # padrão
 - Landing: busca 8 produtos; **API vazia = sem produtos**; **API fora do ar = placeholders** de `lib/catalog.ts`.
 - `/loja?categoria=Classic`: lista da API; com a API fora do ar mostra um aviso e o WhatsApp.
 
+## Sacola e checkout (`/sacola`)
+
+- Botão de adicionar à sacola na `/loja` e na landing (só para produtos que vêm da API). Respeita o estoque e o limite de 20 unidades.
+- A sacola fica no `localStorage` (sobrevive a recarregar, sincroniza entre abas e tolera dado corrompido). Ela guarda **só produto e quantidade**;
+  o preço exibido é informativo, o servidor recalcula tudo ao criar o pedido.
+- `Fechar pedido` chama `POST /api/v1/orders`. A confirmação mostra o código (`TK…`) e o total reais. O botão do WhatsApp só aparece com
+  o número configurado em `lib/site.ts`.
+- **`CORS_ORIGINS` da API precisa incluir o domínio do site**: como o site repassa `/api/*`, a API enxerga a origem dele. Sem isso os `POST` dão 403.
+- Ainda não existe tela de acompanhamento do pedido (o endpoint `POST /v1/orders/lookup` já existe no back).
+
 ## Painel (`/admin`)
 
 Login, lista de produtos, cadastro, ocultar/mostrar na loja e ajuste de estoque (entrada/saída com motivo).

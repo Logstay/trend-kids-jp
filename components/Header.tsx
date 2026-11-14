@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import { BagIcon, SearchIcon } from "./icons";
+import { CartButton } from "./cart/CartButton";
+import { SearchIcon } from "./icons";
 
 export function Header() {
   return (
@@ -19,9 +20,7 @@ export function Header() {
         <Link href="/loja" className="icon-btn" aria-label="Buscar na loja">
           <SearchIcon />
         </Link>
-        <Link href="/loja" className="icon-btn" aria-label="Sacola">
-          <BagIcon size={20} />
-        </Link>
+        <CartButton />
       </div>
     </header>
   );

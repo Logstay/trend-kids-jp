@@ -39,6 +39,13 @@ describe("toProduct", () => {
     expect(p.photo).toBe("Foto: Classic Clog Infantil Rosa");
   });
 
+  it("carrega id, estoque e preço em centavos para a sacola", () => {
+    const p = toProduct(apiProduct);
+    expect(p.id).toBe("u1");
+    expect(p.stock).toBe(3);
+    expect(p.priceCents).toBe(18990);
+  });
+
   it("marca como novidade só produto criado nos últimos 14 dias", () => {
     const old = new Date(Date.now() - 30 * 86_400_000).toISOString();
     expect(toProduct(apiProduct).isNew).toBe(true);

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Footer } from "@/components/Footer";
+import { AddToCart } from "@/components/cart/AddToCart";
 import { EmptyState } from "@/components/EmptyState";
 import { Header } from "@/components/Header";
 import { WhatsAppIcon } from "@/components/icons";
@@ -96,7 +97,7 @@ export default async function Loja({ searchParams }: Props) {
             {products.map((p) => (
               <article key={p.slug} className="product">
                 <Photo label={p.photo} src={p.image}>
-                  {p.isNew && <span className="product__new">Novidade</span>}
+                  {p.stock === 0 ? <span className="product__new product__new--out">Esgotado</span> : p.isNew && <span className="product__new">Novidade</span>}
                 </Photo>
                 <div className="product__info">
                   <span className="product__cat">{p.category}</span>
@@ -104,6 +105,9 @@ export default async function Loja({ searchParams }: Props) {
                 </div>
                 <div className="product__foot">
                   <span className="product__price">{p.price}</span>
+                  {p.id && p.slug && p.priceCents !== undefined && p.stock !== undefined && (
+                    <AddToCart product={{ id: p.id, slug: p.slug, name: p.name, priceCents: p.priceCents, stock: p.stock }} variant="icon" />
+                  )}
                 </div>
               </article>
             ))}

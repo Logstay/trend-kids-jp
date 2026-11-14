@@ -15,10 +15,10 @@ const GENERIC = "Algo deu errado. Tente novamente.";
 const OFFLINE = "Sem conexão com o servidor. Tente novamente.";
 
 /**
- * Chama a API do painel pelo proxy do próprio site (`/api/*`, ver next.config.ts).
+ * Chama a API pelo proxy do próprio site (`/api/*`, ver next.config.ts).
  * O cookie de sessão viaja sozinho (mesma origem) e nunca é lido pelo JavaScript (HttpOnly).
  */
-export async function adminRequest<T = void>(method: string, path: string, body?: unknown): Promise<T> {
+export async function apiRequest<T = void>(method: string, path: string, body?: unknown): Promise<T> {
   let res: Response;
   try {
     res = await fetch(`/api${path}`, {
@@ -57,6 +57,9 @@ export function putBodyFrom(p: ApiProduct, patch: Partial<Pick<ApiProduct, "name
     active: merged.active,
   };
 }
+
+/** Nome antigo, mantido para o painel. */
+export const adminRequest = apiRequest;
 
 const MAX_INT_DIGITS = 9;
 

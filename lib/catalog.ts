@@ -4,8 +4,11 @@ export type Category = "Classic" | "Com luz" | "Sandálias" | "Forrados" | "Char
 
 export type Product = {
   name: string;
-  /** Presente nos produtos que vêm da API; usado para montar o link do produto. */
+  /** Campos presentes só nos produtos que vêm da API (os placeholders não têm, e por isso não vão à sacola). */
+  id?: string;
   slug?: string;
+  stock?: number;
+  priceCents?: number;
   category: Category;
   price: string;
   isNew?: boolean;

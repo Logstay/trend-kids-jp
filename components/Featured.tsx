@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { listView } from "@/lib/empty";
 import { featuredFilters, type FeaturedFilter, type Product } from "@/lib/catalog";
+import { AddToCart } from "./cart/AddToCart";
 import { EmptyState } from "./EmptyState";
 import { BagIcon } from "./icons";
 import { Photo } from "./Photo";
@@ -47,9 +48,13 @@ export function Featured({ products }: { products: Product[] }) {
             </div>
             <div className="product__foot">
               <span className="product__price">{p.price}</span>
-              <Link href="/loja" className="product__bag" aria-label={`Ver ${p.name} na loja`}>
-                <BagIcon size={18} />
-              </Link>
+              {p.id && p.slug && p.priceCents !== undefined && p.stock !== undefined ? (
+                <AddToCart product={{ id: p.id, slug: p.slug, name: p.name, priceCents: p.priceCents, stock: p.stock }} variant="icon" />
+              ) : (
+                <Link href="/loja" className="product__bag" aria-label={`Ver ${p.name} na loja`}>
+                  <BagIcon size={18} />
+                </Link>
+              )}
             </div>
           </article>
         ))}
