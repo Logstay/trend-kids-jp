@@ -1,4 +1,4 @@
-import { featured, type Category, type Product } from "./catalog";
+import type { Category, Product } from "./catalog";
 
 /** URL base do back (Go). Em produção, defina NEXT_PUBLIC_API_URL. */
 export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080").replace(/\/$/, "");
@@ -76,17 +76,18 @@ export function fromPriceLabel(items: Product[]): string | null {
   return prices.length === 0 ? null : formatPrice(Math.min(...prices));
 }
 
-export type Showcase = { items: Product[]; source: "api" | "fallback" };
+export type Showcase = { items: Product[]; source: "api" | "error" };
 
 /**
  * Vitrine da landing. API vazia => lista vazia (não inventa produto).
- * API fora do ar => placeholders, para a landing nunca quebrar.
+ * API fora do ar ou resposta inválida => `source: "error"`: a tela mostra o estado de falha,
+ * nunca produtos falsos (isso esconderia que o back não respondeu).
  */
 export async function getShowcase(limit: number): Promise<Showcase> {
   try {
     const items = await fetchProducts({ sort: "newest", limit });
     return { items: items.map(toProduct), source: "api" };
   } catch {
-    return { items: featured, source: "fallback" };
+    return { items: [], source: "error" };
   }
 }

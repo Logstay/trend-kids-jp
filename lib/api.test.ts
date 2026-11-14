@@ -92,11 +92,21 @@ describe("getShowcase", () => {
     expect(items).toEqual([]);
   });
 
-  it("cai nos placeholders quando a API está fora do ar", async () => {
+  it("API fora do ar é ERRO, nunca produto falso: a tela mostra o estado vazio de falha", async () => {
     mockFetch(() => Promise.reject(new Error("ECONNREFUSED")));
     const { items, source } = await getShowcase(8);
-    expect(source).toBe("fallback");
-    expect(items.length).toBeGreaterThan(0);
+    expect(source).toBe("error");
+    expect(items).toEqual([]);
+  });
+
+  it.each([
+    ["erro 500", () => json({ code: 500, error: "erro interno" }, 500)],
+    ["resposta que não é JSON", () => Promise.resolve(new Response("<html>bad gateway</html>", { status: 200 }))],
+  ])("%s também é erro, sem placeholders", async (_n, impl) => {
+    mockFetch(impl);
+    const { items, source } = await getShowcase(8);
+    expect(source).toBe("error");
+    expect(items).toEqual([]);
   });
 });
 

@@ -21,8 +21,8 @@ Os produtos vêm da API (`trend-kids-api`, repositório separado). Defina a URL 
 NEXT_PUBLIC_API_URL=http://localhost:8080   # padrão
 ```
 
-- Landing: busca 8 produtos; **API vazia = sem produtos**; **API fora do ar = placeholders** de `lib/catalog.ts`.
-- `/loja?categoria=Classic`: lista da API; com a API fora do ar mostra um aviso e o WhatsApp.
+- Landing: busca 8 produtos. **API vazia** = estado vazio "A vitrine está sendo montada"; **API fora do ar** = estado de erro "Não conseguimos carregar a vitrine". Nunca há produto de mentira.
+- `/loja?categoria=Classic`: lista da API; com a API fora do ar mostra o estado de erro, com "Tentar de novo" e WhatsApp.
 
 ## Sacola e checkout (`/sacola`)
 
@@ -61,7 +61,7 @@ Login, lista de produtos, cadastro, ocultar/mostrar na loja e ajuste de estoque 
 - `components/` — uma seção da landing por componente.
 - `lib/settings.ts` — configurações da loja lidas da API (WhatsApp, telefone, Instagram, cidade). `lib/site.ts` guarda só os valores padrão de emergência.
 - `lib/api.ts` — cliente da API, formatação de preço (centavos → R$) e vitrine com fallback.
-- `lib/catalog.ts` — tipos e placeholders usados só se a API estiver fora do ar.
+- `lib/catalog.ts` — tipos e conteúdo estático da landing (não há mais produtos de exemplo).
 - `public/logo-trendkids.webp` — logo atual (provisório, ver README do design system).
 
 ## Pendências antes de publicar

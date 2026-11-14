@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { AdminProducts } from "@/components/admin/AdminProducts";
+import { EmptyState } from "@/components/EmptyState";
 import { getAdminProducts } from "@/lib/admin-server";
 
 export const dynamic = "force-dynamic";
@@ -10,9 +11,15 @@ export default async function AdminPage() {
 
   if (result.status === "unavailable") {
     return (
-      <p role="alert" className="muted">
-        Não consegui falar com o servidor agora. Recarregue a página em instantes.
-      </p>
+      <EmptyState role="alert" eyebrow="Ops" title="Não consegui falar com o servidor"
+        actions={
+          <a href="/admin" className="btn btn--tinta">
+            Recarregar
+          </a>
+        }
+      >
+        A API não respondeu agora. Confira se ela está rodando e recarregue.
+      </EmptyState>
     );
   }
   return <AdminProducts products={result.products} />;

@@ -17,8 +17,10 @@ export default async function Home() {
       <main>
         <Hero fromPrice={source === "api" ? fromPriceLabel(items) : null} />
         <Categories />
-        {items.length === 0 ? (
-          <LandingEmpty />
+        {source === "error" ? (
+          <LandingEmpty reason="error" />
+        ) : items.length === 0 ? (
+          <LandingEmpty reason="empty" />
         ) : (
           <>
             <Trending products={items.slice(0, 5)} />
