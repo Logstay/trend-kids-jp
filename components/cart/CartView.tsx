@@ -6,8 +6,9 @@ import { ApiError, apiRequest } from "@/lib/admin";
 import { formatPrice, type ApiOrder } from "@/lib/api";
 import { cartCount, subtotalCents, toOrderRequest } from "@/lib/cart";
 import { orderMessage } from "@/lib/order-message";
-import { site, whatsappLink } from "@/lib/site";
+import { hasWhatsApp, whatsappHref } from "@/lib/settings";
 import { EmptyState } from "../EmptyState";
+import { useSettings } from "../SettingsProvider";
 import { WhatsAppIcon } from "../icons";
 import { useCart } from "./CartProvider";
 
@@ -125,7 +126,7 @@ export function CartView() {
 }
 
 function Confirmation({ order }: { order: ApiOrder }) {
-  const hasWhatsApp = (site.whatsapp as string).length > 0;
+  const site = useSettings();
 
   return (
     <div className="admin-panel confirm">
@@ -151,8 +152,8 @@ function Confirmation({ order }: { order: ApiOrder }) {
       </p>
 
       <div className="hero__ctas">
-        {hasWhatsApp ? (
-          <a href={whatsappLink(orderMessage(order))} className="btn btn--lg btn--tinta">
+        {hasWhatsApp(site) ? (
+          <a href={whatsappHref(site, orderMessage(order))} className="btn btn--lg btn--tinta">
             <WhatsAppIcon /> Enviar pedido pelo WhatsApp
           </a>
         ) : (

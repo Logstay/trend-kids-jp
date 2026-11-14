@@ -24,3 +24,15 @@ export async function getAdminProducts(): Promise<AdminProductsResult> {
     return { status: "unavailable" };
   }
 }
+
+/** A sessão do cookie ainda é válida? Pergunta à API (é ela quem sabe), sem expor o cookie ao navegador. */
+export async function hasAdminSession(): Promise<boolean> {
+  const session = (await cookies()).get("session")?.value;
+  if (!session) return false;
+  try {
+    const res = await fetch(`${API_URL}/v1/admin/me`, { headers: { Cookie: `session=${session}` }, cache: "no-store" });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}

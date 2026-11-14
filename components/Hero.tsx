@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { site } from "@/lib/site";
 import { ArrowRight, HangerIcon } from "./icons";
 import { Photo } from "./Photo";
 
-export function Hero() {
+/** `fromPrice` vem do menor preço real do catálogo; sem produtos, a etiqueta não aparece. */
+export function Hero({ fromPrice }: { fromPrice?: string | null }) {
   return (
     <section className="container hero">
       <div className="hero__wrap">
@@ -27,7 +27,7 @@ export function Hero() {
           </div>
           <div className="hero__media">
             <Photo label="Foto real: par de Crocs Classic com charms, fundo creme" icon={<HangerIcon />} />
-            <span className="hero__price">Crocs infantil a partir de {site.fromPrice}</span>
+            {fromPrice && <span className="hero__price">Crocs infantil a partir de {fromPrice}</span>}
           </div>
         </div>
       </div>

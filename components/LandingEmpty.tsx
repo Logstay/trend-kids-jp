@@ -1,21 +1,22 @@
 import { EmptyState } from "./EmptyState";
 import { WhatsAppIcon } from "./icons";
-import { site, whatsappLink } from "@/lib/site";
+import { getSettings, whatsappHref } from "@/lib/settings";
 
 const coming = ["Classic", "Com luz", "Sandálias", "Forrados", "Charms"];
 
 /** Vitrine da landing quando a loja ainda não tem nenhum produto cadastrado. */
-export function LandingEmpty() {
+export async function LandingEmpty() {
+  const site = await getSettings();
   return (
     <section id="novidades" className="container landing-empty">
       <EmptyState variant="landing" eyebrow="Em breve" title="A vitrine está sendo montada" as="h2" className="empty--has-chips"
         actions={
           <>
-            <a href={whatsappLink("Olá! Quero saber o que acabou de chegar de Crocs infantis.")} className="btn btn--lg btn--tinta">
+            <a href={whatsappHref(site, "Olá! Quero saber o que acabou de chegar de Crocs infantis.")} className="btn btn--lg btn--tinta">
               <WhatsAppIcon /> Chamar no WhatsApp
             </a>
-            {site.instagramUrl && (
-              <a href={site.instagramUrl} className="btn btn--lg btn--creme" rel="noopener noreferrer">
+            {site.instagram_url && (
+              <a href={site.instagram_url} className="btn btn--lg btn--creme" rel="noopener noreferrer">
                 Ver no Instagram
               </a>
             )}

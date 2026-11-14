@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition, type FormEvent } from "react";
 import { ApiError, adminRequest, parsePriceToCents, putBodyFrom } from "@/lib/admin";
 import { EmptyState } from "@/components/EmptyState";
+import { AdminNav } from "./AdminNav";
 import { formatPrice, type ApiProduct } from "@/lib/api";
 
 const CATEGORIES = ["Classic", "Com luz", "Sandálias", "Forrados", "Charms"] as const;
@@ -102,6 +103,8 @@ export function AdminProducts({ products }: { products: ApiProduct[] }) {
           Sair
         </button>
       </div>
+
+      <AdminNav current="produtos" />
 
       <p role={message?.kind === "error" ? "alert" : "status"} className={`admin-msg${message ? ` admin-msg--${message.kind}` : ""}`}>
         {message?.text}

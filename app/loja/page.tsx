@@ -9,9 +9,11 @@ import { Photo } from "@/components/Photo";
 import { fetchProducts, toProduct } from "@/lib/api";
 import { listView } from "@/lib/empty";
 import { featuredFilters } from "@/lib/catalog";
-import { site, whatsappLink } from "@/lib/site";
+import { getSettings, whatsappHref } from "@/lib/settings";
 
-export const metadata: Metadata = { title: `Loja — ${site.name}` };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: `Loja — ${(await getSettings()).name}` };
+}
 
 // Categorias aceitas no filtro (as mesmas do back).
 const categories = [...featuredFilters.filter((f) => f !== "Todos"), "Forrados"] as const;
@@ -20,6 +22,7 @@ type Props = { searchParams: Promise<{ categoria?: string }> };
 
 export default async function Loja({ searchParams }: Props) {
   const { categoria } = await searchParams;
+  const site = await getSettings();
   const active = categories.find((c) => c === categoria);
 
   let products: ReturnType<typeof toProduct>[] | null = null;
@@ -55,7 +58,7 @@ export default async function Loja({ searchParams }: Props) {
                 <Link href={active ? `/loja?categoria=${encodeURIComponent(active)}` : "/loja"} className="btn btn--tinta">
                   Tentar de novo
                 </Link>
-                <a href={whatsappLink("Olá! Quero ver os Crocs infantis disponíveis.")} className="btn btn--creme">
+                <a href={whatsappHref(site, "Olá! Quero ver os Crocs infantis disponíveis.")} className="btn btn--creme">
                   <WhatsAppIcon /> Pedir pelo WhatsApp
                 </a>
               </>
@@ -68,7 +71,7 @@ export default async function Loja({ searchParams }: Props) {
           <EmptyState eyebrow="Loja" title="Ainda não temos pares por aqui"
             actions={
               <>
-                <a href={whatsappLink("Olá! Quero ver os Crocs infantis disponíveis.")} className="btn btn--tinta">
+                <a href={whatsappHref(site, "Olá! Quero ver os Crocs infantis disponíveis.")} className="btn btn--tinta">
                   <WhatsAppIcon /> Pedir pelo WhatsApp
                 </a>
                 <Link href="/" className="btn btn--creme">
@@ -116,7 +119,7 @@ export default async function Loja({ searchParams }: Props) {
 
         {(view === "list" || view === "empty-filtered") && (
           <div className="hero__ctas" style={{ marginTop: 48 }}>
-            <a href={whatsappLink("Olá! Quero ver os Crocs infantis disponíveis.")} className="btn btn--lg btn--tinta">
+            <a href={whatsappHref(site, "Olá! Quero ver os Crocs infantis disponíveis.")} className="btn btn--lg btn--tinta">
               <WhatsAppIcon /> Pedir pelo WhatsApp
             </a>
             <Link href="/" className="btn btn--lg btn--creme">

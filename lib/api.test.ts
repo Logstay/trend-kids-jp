@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { fetchProducts, formatPrice, getShowcase, toProduct, type ApiProduct } from "./api";
+import { fetchProducts, formatPrice, fromPriceLabel, getShowcase, toProduct, type ApiProduct } from "./api";
 
 const apiProduct: ApiProduct = {
   id: "u1",
@@ -97,5 +97,24 @@ describe("getShowcase", () => {
     const { items, source } = await getShowcase(8);
     expect(source).toBe("fallback");
     expect(items.length).toBeGreaterThan(0);
+  });
+});
+
+describe("fromPriceLabel", () => {
+  const norm = (s: string | null) => s?.replace(/\s/g, " ") ?? null;
+
+  it("usa o menor preço real do catálogo", () => {
+    const items = [{ ...apiProduct, price_cents: 18990 }, { ...apiProduct, id: "u2", price_cents: 4990 }, { ...apiProduct, id: "u3", price_cents: 15990 }].map(toProduct);
+    expect(norm(fromPriceLabel(items))).toBe("R$ 49,90");
+  });
+
+  it("não inventa preço: sem produtos devolve null", () => {
+    expect(fromPriceLabel([])).toBeNull();
+  });
+
+  it("ignora placeholders (que não têm preço em centavos)", () => {
+    const placeholder = { name: "Foto", category: "Classic" as const, price: "R$ [PREÇO]", photo: "Foto" };
+    expect(fromPriceLabel([placeholder])).toBeNull();
+    expect(norm(fromPriceLabel([placeholder, toProduct(apiProduct)]))).toBe("R$ 189,90");
   });
 });

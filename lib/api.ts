@@ -70,6 +70,12 @@ export async function fetchProducts(filter: ProductFilter = {}): Promise<ApiProd
   return body.items;
 }
 
+/** "R$ 49,90" do produto mais barato, ou null se não houver preço real (placeholders não contam). */
+export function fromPriceLabel(items: Product[]): string | null {
+  const prices = items.map((i) => i.priceCents).filter((c): c is number => typeof c === "number" && c > 0);
+  return prices.length === 0 ? null : formatPrice(Math.min(...prices));
+}
+
 export type Showcase = { items: Product[]; source: "api" | "fallback" };
 
 /**

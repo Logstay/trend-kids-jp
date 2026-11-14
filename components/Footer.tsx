@@ -1,9 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
-import { site } from "@/lib/site";
+import { getSettings, hasWhatsApp, whatsappHref } from "@/lib/settings";
 import { Newsletter } from "./Newsletter";
 
-export function Footer() {
+export async function Footer() {
+  const site = await getSettings();
   return (
     <footer id="contato" className="footer">
       <div className="footer__inner">
@@ -21,7 +22,20 @@ export function Footer() {
             <a href="#historia">Nossa história</a>
             <a href="#contato">Guia de tamanhos e trocas</a>
           </nav>
-          <span className="footer__city">{site.city}</span>
+          <div className="footer__contact">
+            <span className="footer__city">{site.city}</span>
+            {hasWhatsApp(site) && (
+              <a href={whatsappHref(site)} target="_blank" rel="noopener noreferrer">
+                WhatsApp {site.whatsapp_display}
+              </a>
+            )}
+            {site.phone_tel && <a href={`tel:${site.phone_tel}`}>Tel. {site.phone}</a>}
+            {site.instagram_url && (
+              <a href={site.instagram_url} target="_blank" rel="noopener noreferrer">
+                @{site.instagram}
+              </a>
+            )}
+          </div>
         </div>
       </div>
     </footer>

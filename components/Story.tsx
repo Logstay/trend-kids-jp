@@ -1,8 +1,9 @@
-import { site, whatsappLink } from "@/lib/site";
+import { getSettings, hasWhatsApp, whatsappHref } from "@/lib/settings";
 import { InstagramIcon, WhatsAppIcon } from "./icons";
 import { Photo } from "./Photo";
 
-export function Story() {
+export async function Story() {
+  const site = await getSettings();
   return (
     <section id="historia" className="container story">
       <div className="story__media">
@@ -17,17 +18,14 @@ export function Story() {
           garantem a procedência de cada par.]
         </p>
         <div className="story__ctas">
-          <a href={whatsappLink()} className="btn btn--tinta" target={site.whatsapp ? "_blank" : undefined} rel="noopener noreferrer">
+          <a href={whatsappHref(site)} className="btn btn--tinta" target={hasWhatsApp(site) ? "_blank" : undefined} rel="noopener noreferrer">
             <WhatsAppIcon /> Peça pelo WhatsApp
           </a>
-          <a
-            href={site.instagramUrl || "#contato"}
-            className="btn btn--outline"
-            target={site.instagramUrl ? "_blank" : undefined}
-            rel="noopener noreferrer"
-          >
-            <InstagramIcon /> {site.instagram}
-          </a>
+          {site.instagram_url && (
+            <a href={site.instagram_url} className="btn btn--outline" target="_blank" rel="noopener noreferrer">
+              <InstagramIcon /> @{site.instagram}
+            </a>
+          )}
         </div>
       </div>
     </section>

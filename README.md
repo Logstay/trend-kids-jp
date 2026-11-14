@@ -34,6 +34,16 @@ NEXT_PUBLIC_API_URL=http://localhost:8080   # padrão
 - **`CORS_ORIGINS` da API precisa incluir o domínio do site**: como o site repassa `/api/*`, a API enxerga a origem dele. Sem isso os `POST` dão 403.
 - Ainda não existe tela de acompanhamento do pedido (o endpoint `POST /v1/orders/lookup` já existe no back).
 
+## Configurações da loja (`/admin/configuracoes`)
+
+WhatsApp, telefone, Instagram, cidade, nome e descrição **não ficam mais no código**: vêm do banco e são editados no painel.
+Eles aparecem nos botões de WhatsApp, no rodapé, em "Nossa história", na mensagem dos pedidos e no título/descrição do site.
+
+- Ao salvar, o painel limpa o cache das páginas públicas (ação de servidor, só com sessão válida); sem isso o site levaria até 30 s para mostrar a mudança.
+- Contato vazio = não configurado: o botão de WhatsApp aponta para o contato e o rodapé não mostra o item.
+- Se a API cair, o site usa os valores padrão de `lib/site.ts` e continua no ar.
+- O "a partir de R$ …" do herói é calculado do menor preço real do catálogo (some se não houver produtos).
+
 ## Painel (`/admin`)
 
 Login, lista de produtos, cadastro, ocultar/mostrar na loja e ajuste de estoque (entrada/saída com motivo).
@@ -49,7 +59,7 @@ Login, lista de produtos, cadastro, ocultar/mostrar na loja e ajuste de estoque 
 
 - `app/` — rotas (`/` landing, `/loja` listagem da API) e `globals.css` com os tokens do design system.
 - `components/` — uma seção da landing por componente.
-- `lib/site.ts` — **dados da loja** (WhatsApp, Instagram, preço inicial). Preencha antes de publicar.
+- `lib/settings.ts` — configurações da loja lidas da API (WhatsApp, telefone, Instagram, cidade). `lib/site.ts` guarda só os valores padrão de emergência.
 - `lib/api.ts` — cliente da API, formatação de preço (centavos → R$) e vitrine com fallback.
 - `lib/catalog.ts` — tipos e placeholders usados só se a API estiver fora do ar.
 - `public/logo-trendkids.webp` — logo atual (provisório, ver README do design system).
