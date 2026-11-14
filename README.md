@@ -63,6 +63,15 @@ O **WhatsApp de contato** (aba "Contato da loja") e as **vendedoras** são coisa
   - **nenhuma** → WhatsApp de contato (ou a âncora `#contato` se também não houver).
 - O mesmo vale para o botão da confirmação do pedido (a mensagem com o código vai para a vendedora escolhida).
 
+## Foto do produto
+
+No `/admin` o produto tem **uma foto principal** (JPEG, PNG ou WebP, até 5 MB): enviada ao criar ou depois pela lista (Enviar/Trocar/Remover foto).
+- A foto aparece na landing, na `/loja` e na miniatura do painel, com o **nome do produto** como texto alternativo. Sem foto, o bloco rosa continua.
+- O navegador só confere o tipo para responder rápido; quem decide é o servidor, pelo **conteúdo** do arquivo. O nome é gerado pelo servidor.
+- As fotos são servidas pela API e chegam pelo proxy do site (`/api/uploads/...`), então funcionam em qualquer domínio.
+- Se o servidor recusar a foto ao criar o produto, o produto **não se perde**: a tela avisa e a foto pode ser reenviada pela lista.
+- Produção: a API grava em `UPLOAD_DIR`, que precisa ser um volume persistente (ou trocar o armazenamento por S3/R2).
+
 ## Painel (`/admin`)
 
 Login, lista de produtos, cadastro, ocultar/mostrar na loja e ajuste de estoque (entrada/saída com motivo).

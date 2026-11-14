@@ -1,11 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useRef, useState, useTransition, type FormEvent } from "react";
+import { useEffect, useRef, useState, useTransition, type ChangeEvent, type FormEvent } from "react";
 import { ApiError, adminRequest, parsePriceToCents, putBodyFrom } from "@/lib/admin";
 import { EmptyState } from "@/components/EmptyState";
 import { AdminNav } from "./AdminNav";
 import { formatPrice, type ApiProduct } from "@/lib/api";
+import { imageSrc, uploadProductImage, validateImageFile } from "@/lib/media";
 
 const CATEGORIES = ["Classic", "Com luz", "Sandálias", "Forrados", "Charms"] as const;
 const REASONS = ["Reposição", "Venda no balcão", "Devolução", "Correção de contagem", "Perda ou avaria"] as const;
@@ -19,6 +20,10 @@ export function AdminProducts({ products }: { products: ApiProduct[] }) {
   const [message, setMessage] = useState<Message | null>(null);
   const [adjusting, setAdjusting] = useState<string | null>(null);
   const createForm = useRef<HTMLFormElement>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+
+  // Libera a memória da pré-visualização quando ela troca ou o componente sai.
+  useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
 
   /** Executa uma ação da API: trata sessão expirada, mostra o resultado e recarrega a lista. */
   async function run(key: string, action: () => Promise<unknown>, okText: string): Promise<boolean> {
@@ -54,19 +59,90 @@ export function AdminProducts({ products }: { products: ApiProduct[] }) {
       setMessage({ kind: "error", text: "Estoque inicial deve ser um número inteiro, zero ou mais." });
       return;
     }
-    const ok = await run(
-      "create",
-      () =>
-        adminRequest("POST", "/v1/admin/products", {
-          name: form.get("name")?.toString().trim(),
-          category: form.get("category"),
-          description: form.get("description")?.toString().trim() ?? "",
-          price_cents: price,
-          stock,
-        }),
-      "Produto criado.",
-    );
-    if (ok) createForm.current?.reset();
+    const picked = form.get("image");
+    const file = picked instanceof File && picked.size > 0 ? picked : null;
+    if (file) {
+      const problem = validateImageFile(file);
+      if (problem) {
+        setMessage({ kind: "error", text: problem });
+        return;
+      }
+    }
+
+    setBusy("create");
+    setMessage(null);
+    try {
+      const created = await adminRequest<ApiProduct>("POST", "/v1/admin/products", {
+        name: form.get("name")?.toString().trim(),
+        category: form.get("category"),
+        description: form.get("description")?.toString().trim() ?? "",
+        price_cents: price,
+        stock,
+      });
+
+      let result: Message = { kind: "ok", text: "Produto criado." };
+      if (file) {
+        // O produto já existe. Se só a foto falhar, o produto NÃO se perde: avisa e a foto pode ser reenviada pela lista.
+        try {
+          await uploadProductImage(created.id, file);
+          result = { kind: "ok", text: "Produto criado com foto." };
+        } catch (err) {
+          if (err instanceof ApiError && err.status === 401) {
+            router.replace("/admin/login");
+            return;
+          }
+          const why = err instanceof ApiError ? err.message : "erro inesperado";
+          result = { kind: "error", text: `Produto criado, mas a foto não foi enviada: ${why}. Use "Enviar foto" na lista.` };
+        }
+      }
+      setMessage(result);
+      createForm.current?.reset();
+      setPreview(null);
+      startTransition(() => router.refresh());
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        router.replace("/admin/login");
+        return;
+      }
+      setMessage({ kind: "error", text: err instanceof ApiError ? err.message : "Algo deu errado. Tente novamente." });
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  /** Escolheu uma foto no formulário de novo produto: confere e mostra a pré-visualização. */
+  function handlePick(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) {
+      setPreview(null);
+      return;
+    }
+    const problem = validateImageFile(file);
+    if (problem) {
+      setMessage({ kind: "error", text: problem });
+      e.target.value = "";
+      setPreview(null);
+      return;
+    }
+    setMessage(null);
+    setPreview(URL.createObjectURL(file));
+  }
+
+  /** Trocar/enviar a foto de um produto que já existe. */
+  async function handleReplaceImage(e: ChangeEvent<HTMLInputElement>, p: ApiProduct) {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // permite escolher o mesmo arquivo de novo depois
+    if (!file) return;
+    const problem = validateImageFile(file);
+    if (problem) {
+      setMessage({ kind: "error", text: problem });
+      return;
+    }
+    await run(p.id, () => uploadProductImage(p.id, file), p.image ? "Foto trocada." : "Foto enviada.");
+  }
+
+  function removeImage(p: ApiProduct) {
+    return run(p.id, () => adminRequest("DELETE", `/v1/admin/products/${p.id}/image`), "Foto removida.");
   }
 
   function toggleActive(p: ApiProduct) {
@@ -139,6 +215,14 @@ export function AdminProducts({ products }: { products: ApiProduct[] }) {
             <label htmlFor="description">Descrição (opcional)</label>
             <input id="description" name="description" maxLength={500} />
           </div>
+          <div className="field field--wide">
+            <label htmlFor="image">Foto do produto</label>
+            <input id="image" name="image" type="file" accept="image/jpeg,image/png,image/webp" onChange={handlePick} aria-describedby="image-help" />
+            <small id="image-help" className="field__help">
+              JPEG, PNG ou WebP, até 5 MB. Sem foto, o produto aparece na loja com um bloco rosa no lugar.
+            </small>
+            {preview && <img className="photo-preview" src={preview} alt="Pré-visualização da foto escolhida" />}
+          </div>
           <button type="submit" className="btn btn--tinta" disabled={busy === "create"}>
             {busy === "create" ? "Salvando…" : "Criar produto"}
           </button>
@@ -157,7 +241,10 @@ export function AdminProducts({ products }: { products: ApiProduct[] }) {
 
         <ul className="admin-list">
           {products.map((p) => (
-            <li key={p.id} className="admin-row">
+            <li key={p.id} className="admin-row admin-row--product">
+              <div className="admin-thumb">
+                {imageSrc(p.image) ? <img src={imageSrc(p.image)} alt={`Foto de ${p.name}`} loading="lazy" /> : <span>Sem foto</span>}
+              </div>
               <div className="admin-row__main">
                 <span className="admin-row__name">{p.name}</span>
                 <span className="admin-row__meta">
@@ -176,6 +263,18 @@ export function AdminProducts({ products }: { products: ApiProduct[] }) {
               <button type="button" className="btn btn--outline" aria-expanded={adjusting === p.id} onClick={() => setAdjusting(adjusting === p.id ? null : p.id)}>
                 Ajustar estoque
               </button>
+
+              <div className="admin-row__actions">
+                <label className="link-btn file-btn">
+                  {p.image ? "Trocar foto" : "Enviar foto"}
+                  <input type="file" className="sr-only" accept="image/jpeg,image/png,image/webp" disabled={busy === p.id} onChange={(e) => handleReplaceImage(e, p)} />
+                </label>
+                {p.image && (
+                  <button type="button" className="link-btn" disabled={busy === p.id} onClick={() => removeImage(p)}>
+                    Remover foto
+                  </button>
+                )}
+              </div>
 
               {adjusting === p.id && (
                 <form className="admin-form admin-form--inline" onSubmit={(e) => handleAdjust(e, p)}>

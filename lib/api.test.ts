@@ -10,6 +10,7 @@ const apiProduct: ApiProduct = {
   price_cents: 18990,
   stock: 3,
   active: true,
+  image: "",
   created_at: new Date().toISOString(),
 };
 
@@ -44,6 +45,18 @@ describe("toProduct", () => {
     expect(p.id).toBe("u1");
     expect(p.stock).toBe(3);
     expect(p.priceCents).toBe(18990);
+  });
+
+  it("com foto: usa a URL pelo proxy e o nome como texto alternativo", () => {
+    const p = toProduct({ ...apiProduct, image: "/uploads/3f2b8c1e-5d4a-4b6f-9a1c-0e7d2f8b6a31.webp" });
+    expect(p.image).toBe("/api/uploads/3f2b8c1e-5d4a-4b6f-9a1c-0e7d2f8b6a31.webp");
+    expect(p.photo).toBe("Classic Clog Infantil Rosa");
+  });
+
+  it("sem foto: continua dizendo qual foto entra ali e não tem imagem", () => {
+    const p = toProduct(apiProduct);
+    expect(p.image).toBeUndefined();
+    expect(p.photo).toBe("Foto: Classic Clog Infantil Rosa");
   });
 
   it("marca como novidade só produto criado nos últimos 14 dias", () => {

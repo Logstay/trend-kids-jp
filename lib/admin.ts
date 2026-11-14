@@ -19,14 +19,21 @@ const OFFLINE = "Sem conexão com o servidor. Tente novamente.";
  * O cookie de sessão viaja sozinho (mesma origem) e nunca é lido pelo JavaScript (HttpOnly).
  */
 export async function apiRequest<T = void>(method: string, path: string, body?: unknown): Promise<T> {
+  return send<T>(method, path, { headers: { "Content-Type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body) });
+}
+
+/**
+ * Envia um arquivo (multipart). Não fixa o Content-Type: o navegador precisa montá-lo sozinho,
+ * porque o `boundary` do multipart só ele conhece.
+ */
+export async function apiUpload<T = void>(method: string, path: string, form: FormData): Promise<T> {
+  return send<T>(method, path, { body: form });
+}
+
+async function send<T>(method: string, path: string, init: { headers?: Record<string, string>; body?: BodyInit }): Promise<T> {
   let res: Response;
   try {
-    res = await fetch(`/api${path}`, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: body === undefined ? undefined : JSON.stringify(body),
-      credentials: "same-origin",
-    });
+    res = await fetch(`/api${path}`, { method, headers: init.headers, body: init.body, credentials: "same-origin" });
   } catch {
     throw new ApiError(0, OFFLINE); // não repassa a mensagem interna do fetch
   }

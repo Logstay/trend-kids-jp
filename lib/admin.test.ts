@@ -44,7 +44,7 @@ describe("centsToInput", () => {
 
 const product: ApiProduct = {
   id: "u1", name: "Classic Clog Rosa", slug: "classic-clog-rosa", category: "Classic", description: "d",
-  price_cents: 18990, stock: 3, active: true, created_at: "2026-11-14T10:00:00Z",
+  price_cents: 18990, stock: 3, active: true, image: "", created_at: "2026-11-14T10:00:00Z",
 };
 
 describe("putBodyFrom", () => {
