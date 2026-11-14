@@ -396,3 +396,22 @@ button { font: inherit; }
 .field__help { color: var(--tinta-suave); font-weight: 500; font-size: 13px; line-height: 18px; }
 .admin-form--top { align-items: start; }
 .admin-form__actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 12px; }
+
+/* ---------- Seletor de vendedora (WhatsApp) ---------- */
+.picker { border: 0; padding: 0; border-radius: var(--radius-lg); width: min(440px, calc(100% - 32px)); background: var(--creme); color: var(--tinta); }
+.picker::backdrop { background: rgb(27 34 56 / 0.6); }
+.picker__box { padding: 32px; display: grid; gap: 16px; }
+.picker__title { font-size: 30px; line-height: 1.1; }
+.picker__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.picker__item {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 56px; padding: 12px 20px;
+  background: var(--branco); border: 2px solid var(--tinta); border-radius: var(--radius-sm); text-decoration: none; color: var(--tinta);
+}
+.picker__item:hover { background: var(--tinta); color: var(--branco); }
+.picker__item:focus-visible { outline: 3px solid var(--azul-escuro); outline-offset: 2px; }
+.picker__name { font-weight: 800; }
+.picker__num { font-weight: 600; font-size: 14px; opacity: 0.8; }
+.admin-help { padding-left: 20px; display: grid; gap: 6px; margin: 0; }
+.admin-row--seller { grid-template-columns: minmax(0, 1fr) auto auto auto; }
+.admin-row__actions { display: flex; gap: 12px; flex-wrap: wrap; }
+@media (max-width: 720px) { .admin-row--seller { grid-template-columns: 1fr 1fr; } }

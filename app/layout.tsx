@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { CartProvider } from "@/components/cart/CartProvider";
+import { SellersProvider } from "@/components/SellersProvider";
 import { SettingsProvider } from "@/components/SettingsProvider";
+import { getSellers } from "@/lib/sellers";
 import { getSettings } from "@/lib/settings";
 // Fontes servidas pelo próprio site (sem depender do Google Fonts em runtime nem no build).
 import "@fontsource/fraunces/latin-600.css";
@@ -22,12 +24,14 @@ export async function generateMetadata(): Promise<Metadata> {
 export const viewport: Viewport = { themeColor: "#F0357C" };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const settings = await getSettings();
+  const [settings, sellers] = await Promise.all([getSettings(), getSellers()]);
   return (
     <html lang="pt-BR">
       <body>
         <SettingsProvider value={settings}>
-          <CartProvider>{children}</CartProvider>
+          <SellersProvider value={sellers}>
+            <CartProvider>{children}</CartProvider>
+          </SellersProvider>
         </SettingsProvider>
       </body>
     </html>

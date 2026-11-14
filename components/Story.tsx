@@ -1,5 +1,6 @@
-import { getSettings, hasWhatsApp, whatsappHref } from "@/lib/settings";
+import { getSettings } from "@/lib/settings";
 import { InstagramIcon, WhatsAppIcon } from "./icons";
+import { WhatsAppCta } from "./WhatsAppCta";
 import { Photo } from "./Photo";
 
 export async function Story() {
@@ -18,9 +19,9 @@ export async function Story() {
           garantem a procedência de cada par.]
         </p>
         <div className="story__ctas">
-          <a href={whatsappHref(site)} className="btn btn--tinta" target={hasWhatsApp(site) ? "_blank" : undefined} rel="noopener noreferrer">
+          <WhatsAppCta message="Olá! Vim pelo site e quero saber dos Crocs infantis." className="btn btn--tinta">
             <WhatsAppIcon /> Peça pelo WhatsApp
-          </a>
+          </WhatsAppCta>
           {site.instagram_url && (
             <a href={site.instagram_url} className="btn btn--outline" target="_blank" rel="noopener noreferrer">
               <InstagramIcon /> @{site.instagram}

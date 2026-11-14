@@ -1,6 +1,7 @@
 import { EmptyState } from "./EmptyState";
 import { WhatsAppIcon } from "./icons";
-import { getSettings, whatsappHref } from "@/lib/settings";
+import { WhatsAppCta } from "./WhatsAppCta";
+import { getSettings } from "@/lib/settings";
 
 const coming = ["Classic", "Com luz", "Sandálias", "Forrados", "Charms"];
 
@@ -18,9 +19,9 @@ export async function LandingEmpty({ reason }: Props) {
               <a href="/" className="btn btn--lg btn--tinta">
                 Tentar de novo
               </a>
-              <a href={whatsappHref(site, "Olá! Quero ver os Crocs infantis disponíveis.")} className="btn btn--lg btn--creme">
+              <WhatsAppCta message="Olá! Quero ver os Crocs infantis disponíveis." className="btn btn--lg btn--creme">
                 <WhatsAppIcon /> Chamar no WhatsApp
-              </a>
+              </WhatsAppCta>
             </>
           }
         >
@@ -34,9 +35,9 @@ export async function LandingEmpty({ reason }: Props) {
       <EmptyState variant="landing" eyebrow="Em breve" title="A vitrine está sendo montada" as="h2" className="empty--has-chips"
         actions={
           <>
-            <a href={whatsappHref(site, "Olá! Quero saber o que acabou de chegar de Crocs infantis.")} className="btn btn--lg btn--tinta">
+            <WhatsAppCta message="Olá! Quero saber o que acabou de chegar de Crocs infantis." className="btn btn--lg btn--tinta">
               <WhatsAppIcon /> Chamar no WhatsApp
-            </a>
+            </WhatsAppCta>
             {site.instagram_url && (
               <a href={site.instagram_url} className="btn btn--lg btn--creme" rel="noopener noreferrer">
                 Ver no Instagram

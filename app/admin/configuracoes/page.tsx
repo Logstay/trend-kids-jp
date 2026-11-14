@@ -15,7 +15,7 @@ export default async function ConfiguracoesPage() {
       <div className="admin__bar">
         <div>
           <span className="pill pill--rosa">Painel</span>
-          <h1 className="display h2">Configurações</h1>
+          <h1 className="display h2">Contato da loja</h1>
         </div>
       </div>
       <AdminNav current="configuracoes" />

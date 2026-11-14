@@ -53,6 +53,16 @@ Eles aparecem nos botões de WhatsApp, no rodapé, em "Nossa história", na mens
 - Se a API cair, o site usa os valores padrão de `lib/site.ts` e continua no ar.
 - O "a partir de R$ …" do herói é calculado do menor preço real do catálogo (some se não houver produtos).
 
+## Vendedoras e WhatsApp (`/admin/vendedoras`)
+
+O **WhatsApp de contato** (aba "Contato da loja") e as **vendedoras** são coisas separadas:
+- Contato da loja: atendimento geral. Aparece no rodapé e é o plano B quando não há vendedora ativa.
+- Vendedoras: nome + WhatsApp cada uma, ativa/inativa. Para onde o cliente vai quando clica em qualquer botão de WhatsApp:
+  - **2 ou mais ativas** → abre o seletor "Com quem você quer falar?" (`<dialog>` nativo);
+  - **1 ativa** → vai direto para ela;
+  - **nenhuma** → WhatsApp de contato (ou a âncora `#contato` se também não houver).
+- O mesmo vale para o botão da confirmação do pedido (a mensagem com o código vai para a vendedora escolhida).
+
 ## Painel (`/admin`)
 
 Login, lista de produtos, cadastro, ocultar/mostrar na loja e ajuste de estoque (entrada/saída com motivo).

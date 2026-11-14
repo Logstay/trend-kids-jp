@@ -2,7 +2,8 @@ import Link from "next/link";
 
 const links = [
   { key: "produtos", href: "/admin", label: "Produtos" },
-  { key: "configuracoes", href: "/admin/configuracoes", label: "Configurações" },
+  { key: "vendedoras", href: "/admin/vendedoras", label: "Vendedoras" },
+  { key: "configuracoes", href: "/admin/configuracoes", label: "Contato da loja" },
 ] as const;
 
 export function AdminNav({ current }: { current: (typeof links)[number]["key"] }) {

@@ -58,9 +58,9 @@ export function SettingsForm({ initial }: { initial: StoreSettings }) {
   return (
     <section className="admin-panel" aria-labelledby="cfg">
       <h2 id="cfg" className="admin-panel__title">
-        Dados da loja
+        Contato da loja
       </h2>
-      <p className="muted">Estes dados aparecem no site inteiro: botões de WhatsApp, rodapé, “Nossa história” e a mensagem dos pedidos.</p>
+      <p className="muted">Dados gerais que aparecem no site: rodapé, “Nossa história”, título e descrição. Para escolher com quem o cliente fala no WhatsApp, cadastre as vendedoras na aba ao lado.</p>
 
       <form className="admin-form admin-form--grid admin-form--top" onSubmit={handleSubmit}>
         <div className="field">
@@ -72,10 +72,10 @@ export function SettingsForm({ initial }: { initial: StoreSettings }) {
           <input id="city" required maxLength={80} value={form.city} onChange={set("city")} />
         </div>
         <div className="field">
-          <label htmlFor="whatsapp">WhatsApp</label>
+          <label htmlFor="whatsapp">WhatsApp de contato</label>
           <input id="whatsapp" inputMode="tel" autoComplete="off" placeholder="(83) 99999-1234" value={form.whatsapp} onChange={set("whatsapp")} aria-describedby="whatsapp-help" />
           <small id="whatsapp-help" className="field__help">
-            Número com DDD. É para onde vão os pedidos. Deixe vazio para esconder os botões de WhatsApp.
+            Atendimento geral da loja: aparece no rodapé e é usado quando não há vendedora ativa. Os números das vendedoras ficam na aba Vendedoras.
           </small>
         </div>
         <div className="field">
