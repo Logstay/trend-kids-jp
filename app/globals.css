@@ -181,7 +181,8 @@ button { font: inherit; }
   font-weight: 700; font-size: 14px; padding: 10px 18px; min-height: 44px; border-radius: var(--radius-pill);
   cursor: pointer; background: transparent; color: var(--tinta); border: 2px solid var(--tinta);
 }
-.chip[aria-pressed="true"] { background: var(--tinta); color: var(--branco); }
+.chip { text-decoration: none; }
+.chip[aria-pressed="true"], .chip[aria-current="page"] { background: var(--tinta); color: var(--branco); }
 .featured__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 24px; }
 .product {
   background: var(--branco); border-radius: var(--radius-lg); padding: 12px 12px 20px;
@@ -299,4 +300,53 @@ button { font: inherit; }
   .admin-panel { padding: 24px 20px; }
   .admin-row { grid-template-columns: 1fr 1fr; }
   .admin-row__main { grid-column: 1 / -1; }
+}
+
+/* ---------- Estados vazios ---------- */
+/* A logo entra como marca-d'água: recorte circular + multiply (o creme da logo some e só as cores
+   tingem o fundo rosa-claro) + opacidade baixa. Decorativa: o texto continua legível por cima. */
+.empty {
+  position: relative; isolation: isolate; overflow: hidden;
+  background: var(--rosa-claro); border-radius: var(--radius-lg);
+  display: flex; align-items: center;
+}
+.empty__mark {
+  position: absolute; z-index: -1; aspect-ratio: 1; border-radius: 50%; pointer-events: none;
+  background: url("/logo-trendkids.webp") center / 112% no-repeat;
+  mix-blend-mode: multiply; opacity: 0.3;
+}
+.empty__body { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 12px; }
+.empty__title { font-size: 32px; line-height: 1.1; color: var(--tinta); }
+.empty__text { max-width: 46ch; color: var(--tinta); }
+.empty__actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; }
+
+.empty--compact { padding: 40px 40px; min-height: 260px; }
+.empty--compact .empty__mark { width: 280px; right: -48px; top: 50%; transform: translateY(-50%) rotate(8deg); }
+
+.landing-empty { padding-top: 96px; padding-bottom: 96px; }
+.empty--landing { padding: 88px 72px; min-height: 520px; }
+.empty--landing .empty__body { gap: 20px; max-width: 56ch; }
+.empty--landing .empty__title { font-size: clamp(44px, 5.4vw, 72px); line-height: 1.02; }
+.empty--landing .empty__text { font-size: 19px; line-height: 30px; display: flex; flex-direction: column; gap: 24px; }
+.empty--landing .empty__mark { width: min(560px, 62%); right: -96px; bottom: -150px; opacity: 0.36; transform: rotate(-9deg); }
+/* um segundo eco menor da logo, no alto, dá profundidade sem poluir */
+.empty--landing::before {
+  content: ""; position: absolute; z-index: -1; aspect-ratio: 1; width: 180px; border-radius: 50%;
+  right: 38%; top: -70px; background: url("/logo-trendkids.webp") center / 112% no-repeat;
+  mix-blend-mode: multiply; opacity: 0.14; transform: rotate(14deg); pointer-events: none;
+}
+.empty__chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.empty__chip {
+  font-size: 14px; font-weight: 700; padding: 8px 16px; border-radius: var(--radius-pill);
+  background: var(--creme); color: var(--rosa-escuro);
+}
+
+@media (max-width: 720px) {
+  .empty--compact { padding: 32px 24px; min-height: 0; }
+  .empty--compact .empty__mark { width: 190px; right: -70px; top: -50px; opacity: 0.24; transform: rotate(8deg); }
+  .empty__title { font-size: 28px; }
+  .landing-empty { padding-top: 56px; padding-bottom: 56px; }
+  .empty--landing { padding: 48px 28px 40px; min-height: 0; }
+  .empty--landing .empty__mark { width: 72%; right: -30%; bottom: -24%; opacity: 0.24; }
+  .empty--landing::before { display: none; }
 }

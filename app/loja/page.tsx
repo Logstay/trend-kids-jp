@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Footer } from "@/components/Footer";
+import { EmptyState } from "@/components/EmptyState";
 import { Header } from "@/components/Header";
 import { WhatsAppIcon } from "@/components/icons";
 import { Photo } from "@/components/Photo";
 import { fetchProducts, toProduct } from "@/lib/api";
+import { listView } from "@/lib/empty";
 import { featuredFilters } from "@/lib/catalog";
 import { site, whatsappLink } from "@/lib/site";
 
@@ -19,12 +21,14 @@ export default async function Loja({ searchParams }: Props) {
   const { categoria } = await searchParams;
   const active = categories.find((c) => c === categoria);
 
-  let products = null;
+  let products: ReturnType<typeof toProduct>[] | null = null;
   try {
     products = (await fetchProducts({ category: active, sort: "newest", limit: 50 })).map(toProduct);
   } catch {
     // API fora do ar: mostra aviso e mantém o caminho do WhatsApp.
   }
+
+  const view = listView(products, Boolean(active));
 
   return (
     <>
@@ -43,14 +47,51 @@ export default async function Loja({ searchParams }: Props) {
           ))}
         </nav>
 
-        {products === null && (
-          <p role="alert" className="muted">
-            Não consegui carregar a vitrine agora. Tente de novo em instantes ou peça pelo WhatsApp.
-          </p>
+        {view === "error" && (
+          <EmptyState role="alert" eyebrow="Ops" title="Não consegui carregar a vitrine agora"
+            actions={
+              <>
+                <Link href={active ? `/loja?categoria=${encodeURIComponent(active)}` : "/loja"} className="btn btn--tinta">
+                  Tentar de novo
+                </Link>
+                <a href={whatsappLink("Olá! Quero ver os Crocs infantis disponíveis.")} className="btn btn--creme">
+                  <WhatsAppIcon /> Pedir pelo WhatsApp
+                </a>
+              </>
+            }
+          >
+            Foi uma falha do nosso lado. Tente de novo em instantes ou peça direto pelo WhatsApp.
+          </EmptyState>
         )}
-        {products?.length === 0 && <p className="muted">Nenhum produto {active ? `em “${active}” ` : ""}por enquanto.</p>}
+        {view === "empty" && (
+          <EmptyState eyebrow="Loja" title="Ainda não temos pares por aqui"
+            actions={
+              <>
+                <a href={whatsappLink("Olá! Quero ver os Crocs infantis disponíveis.")} className="btn btn--tinta">
+                  <WhatsAppIcon /> Pedir pelo WhatsApp
+                </a>
+                <Link href="/" className="btn btn--creme">
+                  Voltar ao início
+                </Link>
+              </>
+            }
+          >
+            A vitrine online está sendo montada. Peça pelo WhatsApp que a gente separa o par do seu pequeno.
+          </EmptyState>
+        )}
+        {view === "empty-filtered" && (
+          <EmptyState title={`Nada em “${active}” por enquanto`}
+            actions={
+              <Link href="/loja" className="btn btn--tinta">
+                Ver todos os produtos
+              </Link>
+            }
+          >
+            Esses pares acabaram ou ainda estão chegando. Dá uma olhada nas outras coleções.
+          </EmptyState>
+        )}
 
-        {products && products.length > 0 && (
+        {products && view === "list" && (
           <div className="featured__grid">
             {products.map((p) => (
               <article key={p.slug} className="product">
@@ -69,14 +110,16 @@ export default async function Loja({ searchParams }: Props) {
           </div>
         )}
 
-        <div className="hero__ctas" style={{ marginTop: 48 }}>
-          <a href={whatsappLink("Olá! Quero ver os Crocs infantis disponíveis.")} className="btn btn--lg btn--tinta">
-            <WhatsAppIcon /> Pedir pelo WhatsApp
-          </a>
-          <Link href="/" className="btn btn--lg btn--creme">
-            Voltar ao início
-          </Link>
-        </div>
+        {(view === "list" || view === "empty-filtered") && (
+          <div className="hero__ctas" style={{ marginTop: 48 }}>
+            <a href={whatsappLink("Olá! Quero ver os Crocs infantis disponíveis.")} className="btn btn--lg btn--tinta">
+              <WhatsAppIcon /> Pedir pelo WhatsApp
+            </a>
+            <Link href="/" className="btn btn--lg btn--creme">
+              Voltar ao início
+            </Link>
+          </div>
+        )}
       </main>
       <Footer />
     </>

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition, type FormEvent } from "react";
 import { ApiError, adminRequest, parsePriceToCents, putBodyFrom } from "@/lib/admin";
+import { EmptyState } from "@/components/EmptyState";
 import { formatPrice, type ApiProduct } from "@/lib/api";
 
 const CATEGORIES = ["Classic", "Com luz", "Sandálias", "Forrados", "Charms"] as const;
@@ -145,7 +146,11 @@ export function AdminProducts({ products }: { products: ApiProduct[] }) {
         <h2 id="lista" className="admin-panel__title">
           {products.length} {products.length === 1 ? "produto" : "produtos"}
         </h2>
-        {products.length === 0 && <p className="muted">Nenhum produto cadastrado ainda.</p>}
+        {products.length === 0 && (
+          <EmptyState as="h3" title="Nenhum produto cadastrado">
+            Use o formulário acima para cadastrar o primeiro. Assim que ele for criado, a loja já mostra.
+          </EmptyState>
+        )}
 
         <ul className="admin-list">
           {products.map((p) => (

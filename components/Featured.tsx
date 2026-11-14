@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { listView } from "@/lib/empty";
 import { featuredFilters, type FeaturedFilter, type Product } from "@/lib/catalog";
+import { EmptyState } from "./EmptyState";
 import { BagIcon } from "./icons";
 import { Photo } from "./Photo";
 
@@ -22,7 +24,17 @@ export function Featured({ products }: { products: Product[] }) {
           ))}
         </div>
       </div>
-      {items.length === 0 && <p className="muted">Nenhum produto nesta coleção por enquanto.</p>}
+      {listView(items, filter !== "Todos") === "empty-filtered" && (
+        <EmptyState role="status" as="h3" title={`Nada em “${filter}” por enquanto`}
+          actions={
+            <button type="button" className="btn btn--outline" onClick={() => setFilter("Todos")}>
+              Ver todos os produtos
+            </button>
+          }
+        >
+          Esses pares acabaram ou ainda estão chegando. Dá uma olhada nas outras coleções.
+        </EmptyState>
+      )}
       <div className="featured__grid">
         {items.map((p) => (
           <article key={p.name} className="product">
