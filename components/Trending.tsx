@@ -2,14 +2,15 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { trending } from "@/lib/catalog";
+import type { Product } from "@/lib/catalog";
 import { ArrowLeft, ArrowRight } from "./icons";
 import { Photo } from "./Photo";
 
-export function Trending() {
+export function Trending({ products }: { products: Product[] }) {
   const [slide, setSlide] = useState(0);
-  const n = trending.length;
-  const visible = [0, 1, 2].map((k) => ({ item: trending[(slide + k) % n], active: k === 1 }));
+  const n = products.length;
+  if (n === 0) return null;
+  const visible = [0, 1, 2].map((k) => ({ item: products[(slide + k) % n], active: k === 1 }));
 
   return (
     <section id="novidades" className="trending" aria-roledescription="carrossel" aria-label="Em alta agora">
@@ -31,8 +32,8 @@ export function Trending() {
         </div>
 
         <div className="trending__grid" aria-live="polite">
-          {visible.map(({ item, active }) => (
-            <Link key={item.name} href="/loja" className={`trend-card${active ? " trend-card--active" : ""}`}>
+          {visible.map(({ item, active }, k) => (
+            <Link key={`${item.name}-${k}`} href="/loja" className={`trend-card${active ? " trend-card--active" : ""}`}>
               <Photo label={item.photo} src={item.image}>
                 {active && <span className="trend-card__badge">Mais vendido</span>}
               </Photo>
@@ -45,7 +46,7 @@ export function Trending() {
         </div>
 
         <div className="dots" aria-hidden="true">
-          {trending.map((t, i) => (
+          {products.map((t, i) => (
             <span key={t.name} className={`dot${i === slide ? " dot--on" : ""}`} />
           ))}
         </div>

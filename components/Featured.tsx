@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { featured, featuredFilters, type FeaturedFilter } from "@/lib/catalog";
+import { featuredFilters, type FeaturedFilter, type Product } from "@/lib/catalog";
 import { BagIcon } from "./icons";
 import { Photo } from "./Photo";
 
-export function Featured() {
+export function Featured({ products }: { products: Product[] }) {
   const [filter, setFilter] = useState<FeaturedFilter>("Todos");
-  const items = (filter === "Todos" ? featured : featured.filter((p) => p.category === filter)).slice(0, 4);
+  const items = (filter === "Todos" ? products : products.filter((p) => p.category === filter)).slice(0, 4);
 
   return (
     <section className="container featured">
@@ -22,6 +22,7 @@ export function Featured() {
           ))}
         </div>
       </div>
+      {items.length === 0 && <p className="muted">Nenhum produto nesta coleção por enquanto.</p>}
       <div className="featured__grid">
         {items.map((p) => (
           <article key={p.name} className="product">

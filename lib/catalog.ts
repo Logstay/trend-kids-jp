@@ -1,9 +1,11 @@
-// Vitrines da landing. Quando a loja tiver backend, estes dados virão da API.
+// Placeholders da landing: só aparecem quando a API está fora do ar (ver lib/api.ts).
 
-export type Category = "Classic" | "Com luz" | "Sandálias" | "Charms";
+export type Category = "Classic" | "Com luz" | "Sandálias" | "Forrados" | "Charms";
 
 export type Product = {
   name: string;
+  /** Presente nos produtos que vêm da API; usado para montar o link do produto. */
+  slug?: string;
   category: Category;
   price: string;
   isNew?: boolean;
@@ -11,14 +13,6 @@ export type Product = {
   photo: string;
   image?: string;
 };
-
-export const trending: Product[] = [
-  { name: "Classic Clog Rosa", category: "Classic", price: "R$ [PREÇO]", photo: "Foto: Classic Clog infantil rosa" },
-  { name: "Crocs com Luz", category: "Com luz", price: "R$ [PREÇO]", photo: "Foto: Crocs com a sola acesa" },
-  { name: "Classic Clog Azul", category: "Classic", price: "R$ [PREÇO]", photo: "Foto: Classic Clog infantil azul" },
-  { name: "Sandália Crocband", category: "Sandálias", price: "R$ [PREÇO]", photo: "Foto: par de sandálias Crocband" },
-  { name: "Kit 5 Charms", category: "Charms", price: "R$ [PREÇO]", photo: "Foto: kit de charms sobre creme" },
-];
 
 export const featuredFilters = ["Todos", "Classic", "Com luz", "Sandálias", "Charms"] as const;
 export type FeaturedFilter = (typeof featuredFilters)[number];
