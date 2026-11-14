@@ -1,6 +1,7 @@
 import Image from "next/image";
-import Link from "next/link";
+import { footerLinks } from "@/lib/nav";
 import { getSettings, hasWhatsApp, whatsappHref } from "@/lib/settings";
+import { NavLink } from "./NavLink";
 import { Newsletter } from "./Newsletter";
 
 export async function Footer() {
@@ -18,9 +19,11 @@ export async function Footer() {
         <div className="footer__bottom">
           <Image className="footer__logo" src="/logo-trendkids.webp" alt="Trend Kids JP" width={88} height={88} />
           <nav aria-label="Rodapé" className="footer__nav">
-            <Link href="/loja">Loja</Link>
-            <a href="#historia">Nossa história</a>
-            <a href="#contato">Guia de tamanhos e trocas</a>
+            {footerLinks.map((l) => (
+              <NavLink key={l.label} href={l.href}>
+                {l.label}
+              </NavLink>
+            ))}
           </nav>
           <div className="footer__contact">
             <span className="footer__city">{site.city}</span>

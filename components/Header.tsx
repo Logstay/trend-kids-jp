@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
+import { navLinks } from "@/lib/nav";
 import { CartButton } from "./cart/CartButton";
+import { NavLink } from "./NavLink";
 import { SearchIcon } from "./icons";
 
 export function Header() {
@@ -10,11 +12,11 @@ export function Header() {
         <Image src="/logo-trendkids.webp" alt="Trend Kids JP" width={72} height={72} priority />
       </Link>
       <nav aria-label="Principal" className="header__nav">
-        <Link href="/loja">Loja</Link>
-        <a href="#novidades">Novidades</a>
-        <a href="#categorias">Categorias</a>
-        <a href="#historia">Nossa história</a>
-        <a href="#contato">Contato</a>
+        {navLinks.map((l) => (
+          <NavLink key={l.label} href={l.href}>
+            {l.label}
+          </NavLink>
+        ))}
       </nav>
       <div className="header__actions">
         <Link href="/loja" className="icon-btn" aria-label="Buscar na loja">
