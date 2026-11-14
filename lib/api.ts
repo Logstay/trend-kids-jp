@@ -64,7 +64,8 @@ export async function fetchProducts(filter: ProductFilter = {}): Promise<ApiProd
   for (const [key, value] of Object.entries(filter)) {
     if (value !== undefined && value !== "") url.searchParams.set(key, String(value));
   }
-  const res = await fetch(url, { next: { revalidate: 60 } });
+  // Sem cache: com `revalidate` o Next continua servindo o dado velho quando o back cai e o empty state de erro nunca aparece.
+  const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) throw new Error(`API respondeu ${res.status}`);
   const body = (await res.json()) as { items: ApiProduct[] };
   return body.items;

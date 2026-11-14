@@ -24,6 +24,15 @@ NEXT_PUBLIC_API_URL=http://localhost:8080   # padrão
 - Landing: busca 8 produtos. **API vazia** = estado vazio "A vitrine está sendo montada"; **API fora do ar** = estado de erro "Não conseguimos carregar a vitrine". Nunca há produto de mentira.
 - `/loja?categoria=Classic`: lista da API; com a API fora do ar mostra o estado de erro, com "Tentar de novo" e WhatsApp.
 
+## Como ver as chamadas ao back
+
+O navegador quase nunca chama `localhost:8080` direto, então a aba Network **não** mostra a API:
+- **Listagens** (landing, `/loja`, painel) são buscadas pelo **servidor do Next** (`ua=node` no log da API).
+- **Ações** (login, pedido, configurações) vão para `localhost:3000/api/…`, e o Next repassa à API.
+
+Quem mostra tudo é o **log da API**: uma linha por requisição (método, caminho, status, latência, origem). Um `403` com `origin=` é CORS:
+a origem do site não está em `CORS_ORIGINS`. As listagens **não usam cache**: se a API cair, a tela mostra o estado de erro na hora.
+
 ## Sacola e checkout (`/sacola`)
 
 - Botão de adicionar à sacola na `/loja` e na landing (só para produtos que vêm da API). Respeita o estoque e o limite de 20 unidades.

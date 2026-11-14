@@ -66,6 +66,17 @@ describe("fetchProducts", () => {
     expect(url.searchParams.has("q")).toBe(false);
   });
 
+  it("não usa cache: a tela reflete o back em tempo real, inclusive quando ele cai", async () => {
+    // Com `revalidate`, o Next segue servindo o dado velho quando o back cai, e o empty state de erro nunca aparece.
+    const fn = mockFetch(() => json({ items: [] }));
+
+    await fetchProducts();
+
+    const init = (fn.mock.calls[0] as unknown as [string, RequestInit & { next?: unknown }])[1];
+    expect(init.cache).toBe("no-store");
+    expect(init.next).toBeUndefined();
+  });
+
   it("devolve os itens da API", async () => {
     mockFetch(() => json({ items: [apiProduct] }));
     expect(await fetchProducts()).toHaveLength(1);
