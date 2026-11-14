@@ -12,6 +12,7 @@ export type ApiProduct = {
   description: string;
   price_cents: number;
   stock: number;
+  active: boolean;
   created_at: string;
 };
 

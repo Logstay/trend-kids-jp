@@ -9,6 +9,7 @@ const apiProduct: ApiProduct = {
   description: "",
   price_cents: 18990,
   stock: 3,
+  active: true,
   created_at: new Date().toISOString(),
 };
 

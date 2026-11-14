@@ -24,6 +24,17 @@ NEXT_PUBLIC_API_URL=http://localhost:8080   # padrão
 - Landing: busca 8 produtos; **API vazia = sem produtos**; **API fora do ar = placeholders** de `lib/catalog.ts`.
 - `/loja?categoria=Classic`: lista da API; com a API fora do ar mostra um aviso e o WhatsApp.
 
+## Painel (`/admin`)
+
+Login, lista de produtos, cadastro, ocultar/mostrar na loja e ajuste de estoque (entrada/saída com motivo).
+
+- O site repassa `/api/*` para a API (`next.config.ts`), então o cookie de sessão nasce na origem do site.
+  O navegador nunca fala direto com a API do painel e o JavaScript não enxerga o cookie (HttpOnly).
+- `/admin` é renderizada no servidor: sem sessão válida redireciona para `/admin/login`.
+- **Atrás do proxy, a API precisa de `TRUSTED_PROXIES`** com o IP do servidor do site; sem isso o limite
+  de tentativas de login vira global (um atacante travaria o dono). Veja o `.env.example` da API.
+- O dono é criado na API: `go run ./cmd/createadmin -email ...` (não existe cadastro público).
+
 ## Estrutura
 
 - `app/` — rotas (`/` landing, `/loja` listagem da API) e `globals.css` com os tokens do design system.
