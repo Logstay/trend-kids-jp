@@ -10,7 +10,7 @@ const apiProduct: ApiProduct = {
   price_cents: 18990,
   stock: 3,
   active: true,
-  image: "",
+  image: "", images: [],
   created_at: new Date().toISOString(),
 };
 
@@ -47,8 +47,21 @@ describe("toProduct", () => {
     expect(p.priceCents).toBe(18990);
   });
 
+  it("galeria: todas as fotos em ordem pelo proxy, e a capa é a primeira", () => {
+    const k = (n: number) => `0000000${n}-0000-4000-8000-000000000000.webp`;
+    const p = toProduct({ ...apiProduct, image: `/uploads/${k(1)}`, images: [1, 2, 3].map((n) => ({ key: k(n), url: `/uploads/${k(n)}` })) });
+    expect(p.images).toEqual([1, 2, 3].map((n) => `/api/uploads/${k(n)}`));
+    expect(p.image).toBe(`/api/uploads/${k(1)}`);
+  });
+
+  it("descarta da galeria qualquer URL que não seja uma foto válida", () => {
+    const good = "/uploads/3f2b8c1e-5d4a-4b6f-9a1c-0e7d2f8b6a31.webp";
+    const p = toProduct({ ...apiProduct, images: [{ key: "x", url: "javascript:alert(1)" }, { key: "y", url: good }, { key: "z", url: "//evil.com/a.png" }] });
+    expect(p.images).toEqual([`/api${good}`]);
+  });
+
   it("com foto: usa a URL pelo proxy e o nome como texto alternativo", () => {
-    const p = toProduct({ ...apiProduct, image: "/uploads/3f2b8c1e-5d4a-4b6f-9a1c-0e7d2f8b6a31.webp" });
+    const p = toProduct({ ...apiProduct, image: "/uploads/3f2b8c1e-5d4a-4b6f-9a1c-0e7d2f8b6a31.webp", images: [{ key: "3f2b8c1e-5d4a-4b6f-9a1c-0e7d2f8b6a31.webp", url: "/uploads/3f2b8c1e-5d4a-4b6f-9a1c-0e7d2f8b6a31.webp" }] });
     expect(p.image).toBe("/api/uploads/3f2b8c1e-5d4a-4b6f-9a1c-0e7d2f8b6a31.webp");
     expect(p.photo).toBe("Classic Clog Infantil Rosa");
   });

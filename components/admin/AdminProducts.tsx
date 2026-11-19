@@ -6,7 +6,7 @@ import { ApiError, adminRequest, parsePriceToCents, putBodyFrom } from "@/lib/ad
 import { EmptyState } from "@/components/EmptyState";
 import { AdminNav } from "./AdminNav";
 import { formatPrice, type ApiProduct } from "@/lib/api";
-import { imageSrc, uploadProductImage, validateImageFile } from "@/lib/media";
+import { MAX_IMAGES, imageSrc, removeProductImage, uploadProductImages, validateImageFile } from "@/lib/media";
 
 const CATEGORIES = ["Classic", "Com luz", "Sandálias", "Forrados", "Charms"] as const;
 const REASONS = ["Reposição", "Venda no balcão", "Devolução", "Correção de contagem", "Perda ou avaria"] as const;
@@ -83,17 +83,14 @@ export function AdminProducts({ products }: { products: ApiProduct[] }) {
       let result: Message = { kind: "ok", text: "Produto criado." };
       if (file) {
         // O produto já existe. Se só a foto falhar, o produto NÃO se perde: avisa e a foto pode ser reenviada pela lista.
-        try {
-          await uploadProductImage(created.id, file);
-          result = { kind: "ok", text: "Produto criado com foto." };
-        } catch (err) {
-          if (err instanceof ApiError && err.status === 401) {
-            router.replace("/admin/login");
-            return;
-          }
-          const why = err instanceof ApiError ? err.message : "erro inesperado";
-          result = { kind: "error", text: `Produto criado, mas a foto não foi enviada: ${why}. Use "Enviar foto" na lista.` };
+        const out = await uploadProductImages(created.id, [file]);
+        if (out.unauthorized) {
+          router.replace("/admin/login");
+          return;
         }
+        result = out.failed.length === 0
+          ? { kind: "ok", text: "Produto criado com foto." }
+          : { kind: "error", text: `Produto criado, mas a foto não foi enviada: ${out.failed[0].message}. Use "Adicionar foto" na lista.` };
       }
       setMessage(result);
       createForm.current?.reset();
@@ -138,11 +135,20 @@ export function AdminProducts({ products }: { products: ApiProduct[] }) {
       setMessage({ kind: "error", text: problem });
       return;
     }
-    await run(p.id, () => uploadProductImage(p.id, file), p.image ? "Foto trocada." : "Foto enviada.");
+    await run(
+      p.id,
+      async () => {
+        const out = await uploadProductImages(p.id, [file]);
+        if (out.unauthorized) throw new ApiError(401, "Sessão expirada.");
+        if (out.failed.length > 0) throw new ApiError(400, out.failed[0].message);
+      },
+      "Foto adicionada.",
+    );
   }
 
   function removeImage(p: ApiProduct) {
-    return run(p.id, () => adminRequest("DELETE", `/v1/admin/products/${p.id}/image`), "Foto removida.");
+    // Provisório até a tela da galeria: remove a capa (a primeira foto); a seguinte passa a ser a capa.
+    return run(p.id, () => removeProductImage(p.id, p.images[0].key), "Capa removida.");
   }
 
   function toggleActive(p: ApiProduct) {
@@ -266,12 +272,12 @@ export function AdminProducts({ products }: { products: ApiProduct[] }) {
 
               <div className="admin-row__actions">
                 <label className="link-btn file-btn">
-                  {p.image ? "Trocar foto" : "Enviar foto"}
-                  <input type="file" className="sr-only" accept="image/jpeg,image/png,image/webp" disabled={busy === p.id} onChange={(e) => handleReplaceImage(e, p)} />
+                  {p.images.length > 0 ? "Adicionar foto" : "Enviar foto"}
+                  <input type="file" className="sr-only" accept="image/jpeg,image/png,image/webp" disabled={busy === p.id || p.images.length >= MAX_IMAGES} onChange={(e) => handleReplaceImage(e, p)} />
                 </label>
-                {p.image && (
+                {p.images.length > 0 && (
                   <button type="button" className="link-btn" disabled={busy === p.id} onClick={() => removeImage(p)}>
-                    Remover foto
+                    Remover capa
                   </button>
                 )}
               </div>

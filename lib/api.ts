@@ -4,6 +4,9 @@ import { imageSrc } from "./media";
 /** URL base do back (Go). Em produção, defina NEXT_PUBLIC_API_URL. */
 export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080").replace(/\/$/, "");
 
+/** Foto da galeria: a chave identifica a foto nas rotas de remover e reordenar. */
+export type ApiImage = { key: string; url: string };
+
 /** Produto como a API devolve (dinheiro em centavos). */
 export type ApiProduct = {
   id: string;
@@ -14,8 +17,10 @@ export type ApiProduct = {
   price_cents: number;
   stock: number;
   active: boolean;
-  /** URL da foto servida pela API (ex.: /uploads/xxx.webp); vazio = sem foto. */
+  /** Capa (a primeira foto), vazio = sem foto. */
   image: string;
+  /** Galeria completa, em ordem de exibição (a primeira é a capa). */
+  images: ApiImage[];
   created_at: string;
 };
 
@@ -48,7 +53,8 @@ export function formatPrice(cents: number): string {
 
 export function toProduct(p: ApiProduct): Product {
   const ageDays = (Date.now() - new Date(p.created_at).getTime()) / 86_400_000;
-  const image = imageSrc(p.image);
+  const images = (p.images ?? []).map((i) => imageSrc(i.url)).filter((u): u is string => Boolean(u));
+  const image = images[0] ?? imageSrc(p.image);
   return {
     id: p.id,
     name: p.name,
@@ -59,6 +65,7 @@ export function toProduct(p: ApiProduct): Product {
     price: formatPrice(p.price_cents),
     isNew: ageDays <= NEW_DAYS,
     image,
+    images,
     // Com foto, o nome vira o texto alternativo. Sem foto, o bloco diz o que deve ser fotografado (nunca imagem de IA).
     photo: image ? p.name : `Foto: ${p.name}`,
   };

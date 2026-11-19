@@ -1,6 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ApiError, apiUpload } from "./admin";
-import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_BYTES, imageSrc, uploadProductImage, validateImageFile } from "./media";
+import {
+  ALLOWED_IMAGE_TYPES, MAX_IMAGES, MAX_IMAGE_BYTES, imageSrc, makeCover, moveKey, nextIndex, planUploads, removeProductImage,
+  reorderProductImages, uploadProductImages, validateImageFile,
+} from "./media";
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -75,16 +78,161 @@ describe("apiUpload", () => {
   });
 });
 
-describe("uploadProductImage", () => {
-  it("manda o arquivo no campo 'image' para a rota do produto", async () => {
-    const fn = vi.fn(() => Promise.resolve(new Response(JSON.stringify({ id: "p1", image: "/uploads/a.png" }), { status: 200 })));
+const f = (name: string, type = "image/png", size = 1024) => ({ name, type, size }) as File; // só para validação (lê name/type/size)
+const real = (name: string) => new File(["x"], name, { type: "image/png" }); // para envio: o FormData precisa de um File de verdade
+
+describe("moveKey / makeCover", () => {
+  const keys = ["a", "b", "c", "d"];
+
+  it("move uma foto uma posição para a esquerda ou para a direita", () => {
+    expect(moveKey(keys, "c", -1)).toEqual(["a", "c", "b", "d"]);
+    expect(moveKey(keys, "b", 1)).toEqual(["a", "c", "b", "d"]);
+  });
+
+  it("nas pontas não faz nada (devolve a mesma ordem)", () => {
+    expect(moveKey(keys, "a", -1)).toEqual(keys);
+    expect(moveKey(keys, "d", 1)).toEqual(keys);
+  });
+
+  it("chave desconhecida não muda nada", () => {
+    expect(moveKey(keys, "zzz", 1)).toEqual(keys);
+  });
+
+  it("não altera a lista original", () => {
+    const copy = [...keys];
+    moveKey(keys, "c", -1);
+    makeCover(keys, "d");
+    expect(keys).toEqual(copy);
+  });
+
+  it("tornar capa leva a foto para o começo e mantém a ordem das outras", () => {
+    expect(makeCover(keys, "c")).toEqual(["c", "a", "b", "d"]);
+    expect(makeCover(keys, "a")).toEqual(keys);
+    expect(makeCover(keys, "zzz")).toEqual(keys);
+  });
+});
+
+describe("nextIndex (carrossel)", () => {
+  it("avança e volta dando a volta nas pontas", () => {
+    expect(nextIndex(0, 3, 1)).toBe(1);
+    expect(nextIndex(2, 3, 1)).toBe(0);
+    expect(nextIndex(0, 3, -1)).toBe(2);
+    expect(nextIndex(1, 3, -1)).toBe(0);
+  });
+
+  it("com 0 ou 1 foto fica sempre em 0", () => {
+    expect(nextIndex(0, 1, 1)).toBe(0);
+    expect(nextIndex(0, 0, -1)).toBe(0);
+  });
+
+  it("índice fora da faixa é corrigido, nunca devolve NaN nem negativo", () => {
+    expect(nextIndex(99, 3, 1)).toBeGreaterThanOrEqual(0);
+    expect(nextIndex(-5, 3, -1)).toBeLessThan(3);
+    expect(Number.isNaN(nextIndex(NaN, 3, 1))).toBe(false);
+  });
+});
+
+describe("planUploads", () => {
+  it("aceita arquivos válidos até completar o limite de fotos", () => {
+    const plan = planUploads([f("a.png"), f("b.jpg", "image/jpeg")], 0);
+    expect(plan.accepted).toHaveLength(2);
+    expect(plan.problems).toEqual([]);
+  });
+
+  it("respeita as fotos que o produto já tem: só cabem as vagas que sobraram", () => {
+    const files = Array.from({ length: 5 }, (_, i) => f(`f${i}.png`));
+    const plan = planUploads(files, MAX_IMAGES - 2);
+    expect(plan.accepted.map((x) => x.name)).toEqual(["f0.png", "f1.png"]);
+    expect(plan.problems.join(" ")).toMatch(/limite de 8/);
+    expect(plan.problems.join(" ")).toMatch(/f2\.png|3 foto/);
+  });
+
+  it("galeria cheia: não aceita nenhuma", () => {
+    const plan = planUploads([f("a.png")], MAX_IMAGES);
+    expect(plan.accepted).toEqual([]);
+    expect(plan.problems.length).toBeGreaterThan(0);
+  });
+
+  it("arquivo inválido é recusado com o nome dele, sem derrubar os bons", () => {
+    const plan = planUploads([f("ok.png"), f("desenho.svg", "image/svg+xml"), f("enorme.png", "image/png", MAX_IMAGE_BYTES + 1)], 0);
+    expect(plan.accepted.map((x) => x.name)).toEqual(["ok.png"]);
+    expect(plan.problems.join(" ")).toMatch(/desenho\.svg/);
+    expect(plan.problems.join(" ")).toMatch(/enorme\.png/);
+  });
+
+  it("não deixa o mesmo arquivo entrar duas vezes na mesma escolha", () => {
+    const a = f("a.png");
+    expect(planUploads([a, a], 0).accepted).toHaveLength(1);
+  });
+});
+
+describe("uploadProductImages (em ordem, uma por vez)", () => {
+  const ok = (key: string) => Promise.resolve(new Response(JSON.stringify({ id: "p1", images: [{ key, url: "/uploads/" + key }] }), { status: 200 }));
+
+  it("envia sequencialmente, para a ordem da galeria ser a ordem escolhida", async () => {
+    const order: string[] = [];
+    let inFlight = 0;
+    let maxInFlight = 0;
+    vi.stubGlobal("fetch", vi.fn(async (_url: string, init: RequestInit) => {
+      inFlight++;
+      maxInFlight = Math.max(maxInFlight, inFlight);
+      order.push(((init.body as FormData).get("image") as File).name);
+      await new Promise((r) => setTimeout(r, 5));
+      inFlight--;
+      return ok("x");
+    }));
+
+    const out = await uploadProductImages("p1", [real("1.png"), real("2.png"), real("3.png")]);
+
+    expect(order).toEqual(["1.png", "2.png", "3.png"]);
+    expect(maxInFlight).toBe(1);
+    expect(out.sent).toBe(3);
+    expect(out.failed).toEqual([]);
+  });
+
+  it("se uma falha, continua com as outras e informa qual falhou e por quê", async () => {
+    let n = 0;
+    vi.stubGlobal("fetch", vi.fn(() => {
+      n++;
+      return n === 2
+        ? Promise.resolve(new Response(JSON.stringify({ code: 400, error: "formato não suportado" }), { status: 400 }))
+        : ok("k" + n);
+    }));
+
+    const out = await uploadProductImages("p1", [real("1.png"), real("2.png"), real("3.png")]);
+
+    expect(out.sent).toBe(2);
+    expect(out.failed).toEqual([{ name: "2.png", message: "formato não suportado" }]);
+  });
+
+  it("sessão expirada (401) interrompe tudo em vez de insistir", async () => {
+    const fn = vi.fn(() => Promise.resolve(new Response(JSON.stringify({ code: 401, error: "sessão inválida" }), { status: 401 })));
     vi.stubGlobal("fetch", fn);
-    const file = new File(["x"], "foto.png", { type: "image/png" });
 
-    await uploadProductImage("p1", file);
+    const out = await uploadProductImages("p1", [real("1.png"), real("2.png"), real("3.png")]);
 
+    expect(fn).toHaveBeenCalledTimes(1);
+    expect(out.unauthorized).toBe(true);
+  });
+});
+
+describe("removeProductImage / reorderProductImages", () => {
+  it("remove pela chave", async () => {
+    const fn = vi.fn(() => Promise.resolve(new Response(JSON.stringify({ id: "p1", images: [] }), { status: 200 })));
+    vi.stubGlobal("fetch", fn);
+    await removeProductImage("p1", "k1.webp");
     const [url, init] = fn.mock.calls[0] as unknown as [string, RequestInit];
-    expect(url).toBe("/api/v1/admin/products/p1/image");
-    expect((init.body as FormData).get("image")).toBeInstanceOf(File);
+    expect(url).toBe("/api/v1/admin/products/p1/images/k1.webp");
+    expect(init.method).toBe("DELETE");
+  });
+
+  it("reordena mandando a lista completa de chaves", async () => {
+    const fn = vi.fn(() => Promise.resolve(new Response(JSON.stringify({ id: "p1", images: [] }), { status: 200 })));
+    vi.stubGlobal("fetch", fn);
+    await reorderProductImages("p1", ["b", "a"]);
+    const [url, init] = fn.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe("/api/v1/admin/products/p1/images/order");
+    expect(init.method).toBe("PUT");
+    expect(JSON.parse(init.body as string)).toEqual({ keys: ["b", "a"] });
   });
 });

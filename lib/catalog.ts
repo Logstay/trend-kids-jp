@@ -14,7 +14,9 @@ export type Product = {
   isNew?: boolean;
   /** Descrição da foto que deve entrar aqui (placeholder até existir foto real). */
   photo: string;
+  /** Capa e galeria (já prontas para exibir, pelo proxy do site). */
   image?: string;
+  images?: string[];
 };
 
 export const featuredFilters = ["Todos", "Classic", "Com luz", "Sandálias", "Charms"] as const;
