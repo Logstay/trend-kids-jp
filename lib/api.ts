@@ -83,6 +83,14 @@ export async function fetchProducts(filter: ProductFilter = {}): Promise<ApiProd
   return body.items;
 }
 
+/** Um produto pelo slug. 404 (não existe/inativo) → null; qualquer outra falha lança, para a página mostrar erro e não "não encontrado". */
+export async function fetchProduct(slug: string): Promise<ApiProduct | null> {
+  const res = await fetch(`${API_URL}/v1/products/${encodeURIComponent(slug)}`, { cache: "no-store" });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`API respondeu ${res.status}`);
+  return (await res.json()) as ApiProduct;
+}
+
 /** "R$ 49,90" do produto mais barato, ou null se não houver preço real (placeholders não contam). */
 export function fromPriceLabel(items: Product[]): string | null {
   const prices = items.map((i) => i.priceCents).filter((c): c is number => typeof c === "number" && c > 0);

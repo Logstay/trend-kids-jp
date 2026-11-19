@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { fetchProducts, formatPrice, fromPriceLabel, getShowcase, toProduct, type ApiProduct } from "./api";
+import { fetchProduct, fetchProducts, formatPrice, fromPriceLabel, getShowcase, toProduct, type ApiProduct } from "./api";
 
 const apiProduct: ApiProduct = {
   id: "u1",
@@ -163,5 +163,39 @@ describe("fromPriceLabel", () => {
     const placeholder = { name: "Foto", category: "Classic" as const, price: "R$ [PREÇO]", photo: "Foto" };
     expect(fromPriceLabel([placeholder])).toBeNull();
     expect(norm(fromPriceLabel([placeholder, toProduct(apiProduct)]))).toBe("R$ 189,90");
+  });
+});
+
+describe("fetchProduct", () => {
+  it("200: devolve o produto", async () => {
+    mockFetch(() => json(apiProduct));
+    expect(await fetchProduct(apiProduct.slug)).toEqual(apiProduct);
+  });
+
+  it("404: devolve null (produto não existe ou está inativo)", async () => {
+    mockFetch(() => json({ error: "not found" }, 404));
+    expect(await fetchProduct("nao-existe")).toBeNull();
+  });
+
+  it("500: lança, para a página mostrar erro e não 404", async () => {
+    mockFetch(() => json({ error: "boom" }, 500));
+    await expect(fetchProduct("x")).rejects.toThrow("500");
+  });
+
+  it("falha de rede: lança", async () => {
+    mockFetch(() => Promise.reject(new TypeError("fetch failed")));
+    await expect(fetchProduct("x")).rejects.toThrow();
+  });
+
+  it("codifica o slug na URL (acentos, espaço e barra)", async () => {
+    const fn = mockFetch(() => json(apiProduct));
+    await fetchProduct("sandália a/b");
+    expect(String(fn.mock.calls[0][0])).toMatch(/\/v1\/products\/sand%C3%A1lia%20a%2Fb$/);
+  });
+
+  it("não usa cache", async () => {
+    const fn = mockFetch(() => json(apiProduct));
+    await fetchProduct("x");
+    expect(fn.mock.calls[0][1]).toMatchObject({ cache: "no-store" });
   });
 });
