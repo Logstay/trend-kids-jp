@@ -15,12 +15,20 @@ export function Featured({ products }: { products: Product[] }) {
       <div className="featured__grid">
         {items.map((p) => (
           <article key={p.name} className="product">
-            <Photo label={p.photo} src={p.image}>
-              {p.isNew && <span className="product__new">Novidade</span>}
-            </Photo>
+            {p.slug ? (
+              <Link href={`/loja/${p.slug}`} aria-label={p.name} tabIndex={-1} className="product__photo-link">
+                <Photo label={p.photo} src={p.image}>
+                  {p.isNew && <span className="product__new">Novidade</span>}
+                </Photo>
+              </Link>
+            ) : (
+              <Photo label={p.photo} src={p.image}>
+                {p.isNew && <span className="product__new">Novidade</span>}
+              </Photo>
+            )}
             <div className="product__info">
               <span className="product__cat">{p.category}</span>
-              <h3 className="product__name">{p.name}</h3>
+              <h3 className="product__name">{p.slug ? <Link href={`/loja/${p.slug}`}>{p.name}</Link> : p.name}</h3>
             </div>
             <div className="product__foot">
               <span className="product__price">{p.price}</span>

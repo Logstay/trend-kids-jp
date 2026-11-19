@@ -16,6 +16,14 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: `Loja — ${(await getSettings()).name}` };
 }
 
+function photo(p: ReturnType<typeof toProduct>) {
+  return (
+    <Photo label={p.photo} src={p.image}>
+      {p.stock === 0 ? <span className="product__new product__new--out">Esgotado</span> : p.isNew && <span className="product__new">Novidade</span>}
+    </Photo>
+  );
+}
+
 type Param = string | string[];
 type Props = { searchParams: Promise<{ categoria?: Param; novidades?: Param }> };
 
@@ -105,12 +113,16 @@ export default async function Loja({ searchParams }: Props) {
           <div className="featured__grid">
             {products.map((p) => (
               <article key={p.slug} className="product">
-                <Photo label={p.photo} src={p.image}>
-                  {p.stock === 0 ? <span className="product__new product__new--out">Esgotado</span> : p.isNew && <span className="product__new">Novidade</span>}
-                </Photo>
+                {p.slug ? (
+                  <Link href={`/loja/${p.slug}`} aria-label={p.name} tabIndex={-1} className="product__photo-link">
+                    {photo(p)}
+                  </Link>
+                ) : (
+                  photo(p)
+                )}
                 <div className="product__info">
                   <span className="product__cat">{p.category}</span>
-                  <h2 className="product__name">{p.name}</h2>
+                  <h2 className="product__name">{p.slug ? <Link href={`/loja/${p.slug}`}>{p.name}</Link> : p.name}</h2>
                 </div>
                 <div className="product__foot">
                   <span className="product__price">{p.price}</span>
