@@ -10,9 +10,6 @@ export const homeSection = (id: HomeSection): string => `/#${id}`;
 export type NavLink = { label: string; href: string };
 
 export const navLinks: NavLink[] = [
-  { label: "Loja", href: "/loja" },
-  { label: "Novidades", href: homeSection("novidades") },
-  { label: "Categorias", href: homeSection("categorias") },
   { label: "Nossa história", href: homeSection("historia") },
   // O rodapé (id="contato") está em todas as páginas públicas, então aqui a âncora local basta.
   { label: "Contato", href: "#contato" },

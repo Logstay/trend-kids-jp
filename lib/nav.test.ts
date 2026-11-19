@@ -17,12 +17,11 @@ describe("links de navegação", () => {
     }
   });
 
-  it("o menu leva às seções da landing pelo caminho completo", () => {
+  it("o menu do topo tem só Nossa história e Contato (Loja vive no submenu)", () => {
+    expect(navLinks.map((l) => l.label)).toEqual(["Nossa história", "Contato"]);
     const byLabel = Object.fromEntries(navLinks.map((l) => [l.label, l.href]));
-    expect(byLabel["Novidades"]).toBe("/#novidades");
-    expect(byLabel["Categorias"]).toBe("/#categorias");
     expect(byLabel["Nossa história"]).toBe("/#historia");
-    expect(byLabel["Loja"]).toBe("/loja");
+    expect(byLabel["Contato"]).toBe("#contato");
   });
 
   it("não repete destinos nem rótulos", () => {
