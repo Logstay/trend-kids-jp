@@ -1,9 +1,13 @@
 import Link from "next/link";
 import { ArrowRight, HangerIcon } from "./icons";
 import { Photo } from "./Photo";
+import type { Product } from "@/lib/catalog";
 
-/** `fromPrice` vem do menor preço real do catálogo; sem produtos, a etiqueta não aparece. */
-export function Hero({ fromPrice }: { fromPrice?: string | null }) {
+/**
+ * `fromPrice` vem do menor preço real do catálogo; sem produtos, a etiqueta não aparece.
+ * `product` é o produto sorteado (com foto) para o destaque; sem ele, fica o bloco de foto a fazer.
+ */
+export function Hero({ fromPrice, product }: { fromPrice?: string | null; product?: Product | null }) {
   return (
     <section className="container hero">
       <div className="hero__wrap">
@@ -26,7 +30,13 @@ export function Hero({ fromPrice }: { fromPrice?: string | null }) {
             </div>
           </div>
           <div className="hero__media">
-            <Photo label="Foto real: par de Crocs Classic com charms, fundo creme" icon={<HangerIcon />} />
+            {product ? (
+              <Link href={product.slug ? `/loja/${product.slug}` : "/loja"} className="hero__link">
+                <Photo label={product.name} src={product.image} />
+              </Link>
+            ) : (
+              <Photo label="Foto real: par de Crocs Classic com charms, fundo creme" icon={<HangerIcon />} />
+            )}
             {fromPrice && <span className="hero__price">Crocs infantil a partir de {fromPrice}</span>}
           </div>
         </div>

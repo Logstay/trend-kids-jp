@@ -140,6 +140,7 @@ button { font: inherit; }
 .hero__lead { margin: 0; font-size: 24px; line-height: 32px; font-weight: 600; color: var(--branco); max-width: 30ch; }
 .hero__ctas { display: flex; flex-wrap: wrap; gap: 12px; padding-top: 8px; }
 .hero__media { flex: 1 1 340px; position: relative; min-height: 460px; display: flex; }
+.hero__link { flex: 1; display: flex; border-radius: var(--radius-lg); }
 .hero__media .photo { flex: 1; box-shadow: 0 24px 48px rgba(27, 34, 56, 0.18); }
 .hero__price {
   position: absolute; left: -20px; bottom: 40px; background: var(--amarelo); color: var(--tinta);
