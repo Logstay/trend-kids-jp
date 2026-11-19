@@ -8,32 +8,32 @@ import { WhatsAppIcon } from "@/components/icons";
 import { WhatsAppCta } from "@/components/WhatsAppCta";
 import { Photo } from "@/components/Photo";
 import { fetchProducts, toProduct } from "@/lib/api";
-import { listView, showsCategories } from "@/lib/empty";
-import { featuredFilters } from "@/lib/catalog";
+import { listView } from "@/lib/empty";
+import { apiFilterFor, emptyFilteredCopy, filterSummary, parseShopFilter, selectProducts, shopMenuItems } from "@/lib/shop-menu";
 import { getSettings } from "@/lib/settings";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: `Loja — ${(await getSettings()).name}` };
 }
 
-// Categorias aceitas no filtro (as mesmas do back).
-const categories = [...featuredFilters.filter((f) => f !== "Todos"), "Forrados"] as const;
-
-type Props = { searchParams: Promise<{ categoria?: string }> };
+type Param = string | string[];
+type Props = { searchParams: Promise<{ categoria?: Param; novidades?: Param }> };
 
 export default async function Loja({ searchParams }: Props) {
-  const { categoria } = await searchParams;
+  const filter = parseShopFilter(await searchParams);
   const site = await getSettings();
-  const active = categories.find((c) => c === categoria);
 
   let products: ReturnType<typeof toProduct>[] | null = null;
   try {
-    products = (await fetchProducts({ category: active, sort: "newest", limit: 50 })).map(toProduct);
+    products = selectProducts((await fetchProducts(apiFilterFor(filter))).map(toProduct), filter);
   } catch {
     // API fora do ar: mostra aviso e mantém o caminho do WhatsApp.
   }
 
-  const view = listView(products, Boolean(active));
+  const view = listView(products, filter.kind !== "all");
+  const summary = filterSummary(filter);
+  const retryHref = (shopMenuItems.find((i) => i.id === (filter.kind === "categoria" ? `categoria:${filter.categoria}` : filter.kind)) ?? shopMenuItems[0]).href;
+  const filteredCopy = emptyFilteredCopy(filter);
 
   return (
     <>
@@ -41,24 +41,17 @@ export default async function Loja({ searchParams }: Props) {
       <main className="container" style={{ paddingBlock: "48px 96px", display: "grid", gap: 24 }}>
         <h1 className="display h2">Loja</h1>
 
-        {showsCategories(view) && (
-          <nav aria-label="Filtrar por categoria" className="chips">
-            <Link href="/loja" className="chip" aria-current={active ? undefined : "page"}>
-              Todos
-            </Link>
-            {categories.map((c) => (
-              <Link key={c} href={`/loja?categoria=${encodeURIComponent(c)}`} className="chip" aria-current={active === c ? "page" : undefined}>
-                {c}
-              </Link>
-            ))}
-          </nav>
+        {summary && view === "list" && (
+          <p className="muted">
+            Mostrando: {summary} · <Link href="/loja">ver todos</Link>
+          </p>
         )}
 
         {view === "error" && (
           <EmptyState role="alert" eyebrow="Ops" title="Não consegui carregar a vitrine agora"
             actions={
               <>
-                <Link href={active ? `/loja?categoria=${encodeURIComponent(active)}` : "/loja"} className="btn btn--tinta">
+                <Link href={retryHref} className="btn btn--tinta">
                   Tentar de novo
                 </Link>
                 <WhatsAppCta message="Olá! Quero ver os Crocs infantis disponíveis." className="btn btn--creme">
@@ -87,14 +80,14 @@ export default async function Loja({ searchParams }: Props) {
           </EmptyState>
         )}
         {view === "empty-filtered" && (
-          <EmptyState title={`Nada em “${active}” por enquanto`}
+          <EmptyState title={filteredCopy.title}
             actions={
               <Link href="/loja" className="btn btn--tinta">
                 Ver todos os produtos
               </Link>
             }
           >
-            Esses pares acabaram ou ainda estão chegando. Dá uma olhada nas outras coleções.
+            {filteredCopy.text}
           </EmptyState>
         )}
 
