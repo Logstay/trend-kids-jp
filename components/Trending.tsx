@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { KeyboardEvent, PointerEvent as ReactPointerEvent } from "react";
 import type { Product } from "@/lib/catalog";
-import { activeIndex, canScroll, isDragClick } from "@/lib/carousel";
+import { activeIndex, canScroll, isDragClick, reachableCount } from "@/lib/carousel";
 import { ArrowLeft, ArrowRight } from "./icons";
 import { Photo } from "./Photo";
 
@@ -18,6 +18,8 @@ export function Trending({ products }: { products: Product[] }) {
   const suppressClick = useRef(false);
   const [edges, setEdges] = useState({ prev: false, next: false });
   const [active, setActive] = useState(0);
+  const [points, setPoints] = useState(0);
+  const stopDrag = useRef<(() => void) | null>(null);
   const [dragging, setDragging] = useState(false);
   const n = products.length;
 
@@ -36,8 +38,10 @@ export function Trending({ products }: { products: Product[] }) {
     const { track, cardWidth, gap } = m;
     const next = canScroll(track.scrollLeft, track.clientWidth, track.scrollWidth);
     setEdges((e) => (e.prev === next.prev && e.next === next.next ? e : next));
-    // No fim da rolagem o último card pode não chegar ao início da tela: marca o último ponto.
-    const idx = next.prev && !next.next ? n - 1 : activeIndex(track.scrollLeft, cardWidth, gap, n);
+    // Só existem pontos para posições alcançáveis; no fim da rolagem o último fica ativo.
+    const count = reachableCount(track.scrollWidth, track.clientWidth, cardWidth, gap, n);
+    const idx = next.prev && !next.next ? count - 1 : activeIndex(track.scrollLeft, cardWidth, gap, count);
+    setPoints(count);
     setActive(idx);
   }, [measure, n]);
 
@@ -57,6 +61,7 @@ export function Trending({ products }: { products: Product[] }) {
       ro?.disconnect();
       window.removeEventListener("resize", schedule);
       cancelAnimationFrame(frame.current);
+      stopDrag.current?.();
     };
   }, [update, schedule]);
 
@@ -103,10 +108,14 @@ export function Trending({ products }: { products: Product[] }) {
       }
       if (moved) track.scrollLeft = startScroll - dx;
     };
-    const onUp = () => {
+    const detach = () => {
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
       window.removeEventListener("pointercancel", onUp);
+      stopDrag.current = null;
+    };
+    const onUp = () => {
+      detach();
       if (moved) {
         // O click do link vem logo depois do pointerup: engole-o e libera no próximo ciclo.
         suppressClick.current = true;
@@ -114,6 +123,7 @@ export function Trending({ products }: { products: Product[] }) {
         setDragging(false); // religa o snap, que assenta no card mais próximo
       }
     };
+    stopDrag.current = detach;
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
     window.addEventListener("pointercancel", onUp);
@@ -171,7 +181,7 @@ export function Trending({ products }: { products: Product[] }) {
 
         {overflowing && (
           <div className="dots">
-            {products.map((item, i) => (
+            {products.slice(0, points).map((item, i) => (
               <button
                 key={item.slug ?? item.name}
                 type="button"

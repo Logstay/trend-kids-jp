@@ -185,10 +185,10 @@ button { font: inherit; }
 .arrow:disabled { opacity: 0.35; cursor: not-allowed; }
 .arrow:focus-visible, .dot:focus-visible, .trending__track:focus-visible { outline: 3px solid var(--azul-escuro); outline-offset: 3px; }
 .trending__track {
-  display: flex; gap: 24px; min-width: 0; padding: 4px;
+  display: flex; gap: 24px; min-width: 0; padding: 8px; margin: -8px;
   overflow-x: auto; overscroll-behavior-x: contain;
-  scroll-snap-type: x mandatory; scroll-padding-inline: 4px;
-  scrollbar-width: none; touch-action: pan-y; cursor: grab;
+  scroll-snap-type: x mandatory; scroll-padding-inline: 8px;
+  scrollbar-width: none; cursor: grab;
 }
 .trending__track::-webkit-scrollbar { display: none; }
 .trending__track--dragging { scroll-snap-type: none; cursor: grabbing; user-select: none; }

@@ -39,3 +39,16 @@ export function canScroll(scrollLeft: number, clientWidth: number, scrollWidth: 
 export function isDragClick(distancePx: number, thresholdPx: number = DRAG_THRESHOLD_PX): boolean {
   return Math.abs(distancePx) >= thresholdPx;
 }
+
+/**
+ * Quantos pontos/posições de rolagem existem de verdade. Com N cards e vários
+ * visíveis, os últimos snaps ficam presos no fim da rolagem; só os alcançáveis contam.
+ * Posição i = i * (cardWidth + gap), com a última clampada ao máximo. Resultado em [min(1,count), count].
+ */
+export function reachableCount(scrollWidth: number, clientWidth: number, cardWidth: number, gap: number, count: number): number {
+  if (count < 1) return 0;
+  const step = cardWidth + gap;
+  const max = scrollWidth - clientWidth;
+  if (count === 1 || !Number.isFinite(step) || step <= 0 || !Number.isFinite(max) || max <= EDGE_TOLERANCE_PX) return 1;
+  return Math.min(count, Math.ceil((max - EDGE_TOLERANCE_PX) / step) + 1);
+}

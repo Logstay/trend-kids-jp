@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DRAG_THRESHOLD_PX, activeIndex, canScroll, isDragClick } from "./carousel";
+import { DRAG_THRESHOLD_PX, activeIndex, canScroll, isDragClick, reachableCount } from "./carousel";
 
 describe("activeIndex", () => {
   it("0 no começo", () => expect(activeIndex(0, 320, 24, 5)).toBe(0));
@@ -47,4 +47,23 @@ describe("isDragClick", () => {
     expect(isDragClick(-12)).toBe(true);
   });
   it("aceita limiar customizado", () => expect(isDragClick(8, 10)).toBe(false));
+});
+
+describe("reachableCount", () => {
+  it("max 604 com passo 344: posições 0, 344, 604 => 3 pontos", () => {
+    expect(reachableCount(1604, 1000, 320, 24, 5)).toBe(3);
+  });
+  it("max 696 com passo 344: 0, 344, 688, 696 clampa => 4 pontos", () => {
+    expect(reachableCount(1696, 1000, 320, 24, 5)).toBe(4);
+  });
+  it("max exato em múltiplo de passo não cria ponto extra", () => {
+    expect(reachableCount(1000 + 688, 1000, 320, 24, 5)).toBe(3);
+  });
+  it("tolera fração de pixel", () => expect(reachableCount(1688.9, 1000, 320, 24, 5)).toBe(3));
+  it("tudo cabe: 1", () => expect(reachableCount(600, 600, 320, 24, 5)).toBe(1));
+  it("nunca passa de count", () => expect(reachableCount(99999, 100, 320, 24, 3)).toBe(3));
+  it("medidas inválidas: 1 (ou count se menor)", () => {
+    expect(reachableCount(1696, 1000, 0, 0, 5)).toBe(1);
+    expect(reachableCount(1696, 1000, 320, 24, 0)).toBe(0);
+  });
 });
