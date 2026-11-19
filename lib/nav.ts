@@ -9,6 +9,9 @@ export const homeSection = (id: HomeSection): string => `/#${id}`;
 
 export type NavLink = { label: string; href: string };
 
+/** Primeiro item do menu do topo: sempre leva ao início da landing. */
+export const homeNav: NavLink = { label: "Início", href: "/" };
+
 export const navLinks: NavLink[] = [
   { label: "Nossa história", href: homeSection("historia") },
   // O rodapé (id="contato") está em todas as páginas públicas, então aqui a âncora local basta.

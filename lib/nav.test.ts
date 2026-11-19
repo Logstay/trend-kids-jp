@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { footerLinks, homeSection, isSectionAnchor, navLinks } from "./nav";
+import { footerLinks, homeNav, homeSection, isSectionAnchor, navLinks } from "./nav";
 
 describe("homeSection", () => {
   it("aponta para a seção da landing a partir de qualquer página", () => {
@@ -22,6 +22,12 @@ describe("links de navegação", () => {
     const byLabel = Object.fromEntries(navLinks.map((l) => [l.label, l.href]));
     expect(byLabel["Nossa história"]).toBe("/#historia");
     expect(byLabel["Contato"]).toBe("#contato");
+  });
+
+  it("Início aponta para a raiz e fica fora de navLinks (vem antes do menu Loja)", () => {
+    expect(homeNav).toEqual({ label: "Início", href: "/" });
+    expect(isSectionAnchor(homeNav.href)).toBe(false);
+    expect(navLinks.map((l) => l.label)).toEqual(["Nossa história", "Contato"]);
   });
 
   it("não repete destinos nem rótulos", () => {

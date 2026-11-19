@@ -1,8 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
-import { navLinks } from "@/lib/nav";
+import { homeNav, navLinks } from "@/lib/nav";
 import { CartButton } from "./cart/CartButton";
+import { HomeLink } from "./HomeLink";
 import { NavLink } from "./NavLink";
 import { ShopMenu, ShopMenuArrow } from "./ShopMenu";
 import { SearchIcon } from "./icons";
@@ -14,6 +15,9 @@ export function Header() {
         <Image src="/logo-trendkids.webp" alt="Trend Kids JP" width={72} height={72} priority />
       </Link>
       <nav aria-label="Principal" className="header__nav">
+        <Suspense fallback={<Link href={homeNav.href}>{homeNav.label}</Link>}>
+          <HomeLink />
+        </Suspense>
         <Suspense
           fallback={
             <div className="shop-menu">

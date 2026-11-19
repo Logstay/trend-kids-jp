@@ -89,7 +89,7 @@ export function SellersAdmin({ sellers }: { sellers: AdminSeller[] }) {
         <h2 id="nova" className="admin-panel__title">
           Nova vendedora
         </h2>
-        <form className="admin-form admin-form--grid admin-form--top" onSubmit={handleCreate}>
+        <form className="admin-form admin-form--grid" onSubmit={handleCreate}>
           <div className="field">
             <label htmlFor="new-name">Nome</label>
             <input id="new-name" name="name" required minLength={2} maxLength={60} autoComplete="off" />
