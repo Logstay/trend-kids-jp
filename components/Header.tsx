@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { navLinks } from "@/lib/nav";
 import { CartButton } from "./cart/CartButton";
 import { NavLink } from "./NavLink";
-import { ShopMenu } from "./ShopMenu";
+import { ShopMenu, ShopMenuArrow } from "./ShopMenu";
 import { SearchIcon } from "./icons";
 
 export function Header() {
@@ -14,7 +14,16 @@ export function Header() {
         <Image src="/logo-trendkids.webp" alt="Trend Kids JP" width={72} height={72} priority />
       </Link>
       <nav aria-label="Principal" className="header__nav">
-        <Suspense fallback={<Link href="/loja">Loja</Link>}>
+        <Suspense
+          fallback={
+            <div className="shop-menu">
+              <Link href="/loja">Loja</Link>
+              <span className="shop-menu__toggle" aria-hidden="true">
+                <ShopMenuArrow />
+              </span>
+            </div>
+          }
+        >
           <ShopMenu />
         </Suspense>
         {navLinks.map((l) => (

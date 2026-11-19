@@ -30,7 +30,17 @@ export default async function Loja({ searchParams }: Props) {
     // API fora do ar: mostra aviso e mantém o caminho do WhatsApp.
   }
 
-  const view = listView(products, filter.kind !== "all");
+  // Categoria sem resultado: confere se a loja inteira está vazia (aí não é "categoria vazia").
+  let storeEmpty = false;
+  if (filter.kind === "categoria" && products?.length === 0) {
+    try {
+      storeEmpty = (await fetchProducts({ limit: 1 })).length === 0;
+    } catch {
+      products = null;
+    }
+  }
+
+  const view = listView(products, filter.kind !== "all", storeEmpty);
   const summary = filterSummary(filter);
   const retryHref = (shopMenuItems.find((i) => i.id === (filter.kind === "categoria" ? `categoria:${filter.categoria}` : filter.kind)) ?? shopMenuItems[0]).href;
   const filteredCopy = emptyFilteredCopy(filter);

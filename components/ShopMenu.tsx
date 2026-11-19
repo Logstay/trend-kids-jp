@@ -2,8 +2,16 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Fragment, useEffect, useId, useRef, useState, type FocusEvent, type KeyboardEvent } from "react";
+import { Fragment, useEffect, useId, useRef, useState, type FocusEvent } from "react";
 import { activeMenuItemId, parseShopFilter, shopMenuItems } from "@/lib/shop-menu";
+
+export function ShopMenuArrow() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" focusable="false">
+      <path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
 
 export function ShopMenu() {
   const [open, setOpen] = useState(false);
@@ -30,16 +38,20 @@ export function ShopMenu() {
     const onPointerDown = (e: PointerEvent) => {
       if (!wrapRef.current?.contains(e.target as Node)) setOpen(false);
     };
+    // Esc em document: funciona mesmo com o foco no body.
+    const onKeyDown = (e: globalThis.KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+        toggleRef.current?.focus();
+      }
+    };
     document.addEventListener("pointerdown", onPointerDown);
-    return () => document.removeEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
   }, [open]);
-
-  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === "Escape" && open) {
-      setOpen(false);
-      toggleRef.current?.focus();
-    }
-  };
 
   // Foco saindo do componente fecha (relatedTarget nulo é tratado pelo pointerdown).
   const onBlur = (e: FocusEvent<HTMLDivElement>) => {
@@ -48,8 +60,10 @@ export function ShopMenu() {
   };
 
   return (
-    <div className="shop-menu" ref={wrapRef} onKeyDown={onKeyDown} onBlur={onBlur}>
-      <Link href="/loja">Loja</Link>
+    <div className="shop-menu" ref={wrapRef} onBlur={onBlur}>
+      <Link href="/loja" onClick={() => setOpen(false)}>
+        Loja
+      </Link>
       <button
         ref={toggleRef}
         type="button"
@@ -59,14 +73,12 @@ export function ShopMenu() {
         aria-label="Abrir menu da Loja"
         onClick={() => setOpen((o) => !o)}
       >
-        <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" focusable="false">
-          <path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+        <ShopMenuArrow />
       </button>
       <ul id={panelId} className="shop-menu__panel" hidden={!open}>
         {shopMenuItems.map((item, i) => (
           <Fragment key={item.id}>
-            {i > 0 && item.group !== shopMenuItems[i - 1].group && <li role="separator" className="shop-menu__sep" />}
+            {i > 0 && item.group !== shopMenuItems[i - 1].group && <li aria-hidden="true" className="shop-menu__sep" />}
             <li>
               <Link
                 href={item.href}

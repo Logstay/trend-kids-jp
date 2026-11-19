@@ -1,4 +1,5 @@
-export const shopCategories = ["Classic", "Com luz", "Sandálias", "Charms", "Forrados"] as const;
+import type { Category } from "./catalog";
+export const shopCategories = ["Classic", "Com luz", "Sandálias", "Charms", "Forrados"] as const satisfies readonly Category[];
 export type ShopCategory = (typeof shopCategories)[number];
 
 export type ShopFilter =
@@ -64,7 +65,7 @@ export function emptyFilteredCopy(filter: ShopFilter): { title: string; text: st
   if (filter.kind === "categoria") {
     return {
       title: `Nada em “${filter.categoria}” por enquanto`,
-      text: "Que tal dar uma olhada em outras coleções?",
+      text: "Esses pares acabaram ou ainda estão chegando. Dá uma olhada nas outras coleções.",
     };
   }
   return { title: "Nada por aqui por enquanto", text: "Volte em breve para ver os modelos." };

@@ -120,7 +120,7 @@ describe("emptyFilteredCopy", () => {
   it("categoria", () => {
     const copy = emptyFilteredCopy({ kind: "categoria", categoria: "Classic" });
     expect(copy.title).toBe("Nada em “Classic” por enquanto");
-    expect(copy.text.length).toBeGreaterThan(0);
+    expect(copy.text).toBe("Esses pares acabaram ou ainda estão chegando. Dá uma olhada nas outras coleções.");
   });
 });
 

@@ -114,7 +114,7 @@ button { font: inherit; }
 }
 .shop-menu__panel[hidden] { display: none; }
 .header__nav .shop-menu__panel a {
-  display: flex; align-items: center; min-height: 44px; padding: 0 16px; border-radius: 12px;
+  display: flex; align-items: center; min-height: 44px; padding: 0 16px; border-radius: var(--radius-sm);
   color: var(--tinta); text-decoration: none;
 }
 .header__nav .shop-menu__panel a:hover { background: var(--rosa-claro); color: var(--tinta); }

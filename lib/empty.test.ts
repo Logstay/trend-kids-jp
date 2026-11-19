@@ -15,6 +15,15 @@ describe("listView", () => {
     expect(listView([], true)).toBe("empty-filtered");
   });
 
+  it("vazio com filtro, mas a loja inteira também vazia: é a loja vazia, não o filtro", () => {
+    expect(listView([], true, true)).toBe("empty");
+  });
+
+  it("storeEmpty não esconde itens nem erro", () => {
+    expect(listView([1], true, true)).toBe("list");
+    expect(listView(null, true, true)).toBe("error");
+  });
+
   it("null é falha ao carregar e vence qualquer outro estado (não é 'vazio')", () => {
     expect(listView(null, false)).toBe("error");
     expect(listView(null, true)).toBe("error");
