@@ -6,7 +6,7 @@ import { ApiError, adminRequest, parsePriceToCents, putBodyFrom } from "@/lib/ad
 import { EmptyState } from "@/components/EmptyState";
 import { AdminNav } from "./AdminNav";
 import { formatPrice, type ApiProduct } from "@/lib/api";
-import { MAX_IMAGES, imageSrc, removeProductImage, uploadProductImages, validateImageFile } from "@/lib/media";
+import { MAX_IMAGES, imageSrc, makeCover, moveKey, planUploads, removeProductImage, reorderProductImages, uploadProductImages, validateImageFile } from "@/lib/media";
 
 const CATEGORIES = ["Classic", "Com luz", "Sandálias", "Forrados", "Charms"] as const;
 const REASONS = ["Reposição", "Venda no balcão", "Devolução", "Correção de contagem", "Perda ou avaria"] as const;
@@ -19,6 +19,8 @@ export function AdminProducts({ products }: { products: ApiProduct[] }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<Message | null>(null);
   const [adjusting, setAdjusting] = useState<string | null>(null);
+  // Painéis de fotos abertos, por id de produto: sobrevive ao router.refresh (o id não muda).
+  const [galleryOpen, setGalleryOpen] = useState<ReadonlySet<string>>(new Set());
   const createForm = useRef<HTMLFormElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
 
@@ -90,7 +92,7 @@ export function AdminProducts({ products }: { products: ApiProduct[] }) {
         }
         result = out.failed.length === 0
           ? { kind: "ok", text: "Produto criado com foto." }
-          : { kind: "error", text: `Produto criado, mas a foto não foi enviada: ${out.failed[0].message}. Use "Adicionar foto" na lista.` };
+          : { kind: "error", text: `Produto criado, mas a foto não foi enviada: ${out.failed[0].message}. Use "Fotos" na lista para enviar de novo.` };
       }
       setMessage(result);
       createForm.current?.reset();
@@ -125,30 +127,49 @@ export function AdminProducts({ products }: { products: ApiProduct[] }) {
     setPreview(URL.createObjectURL(file));
   }
 
-  /** Trocar/enviar a foto de um produto que já existe. */
-  async function handleReplaceImage(e: ChangeEvent<HTMLInputElement>, p: ApiProduct) {
-    const file = e.target.files?.[0];
-    e.target.value = ""; // permite escolher o mesmo arquivo de novo depois
-    if (!file) return;
-    const problem = validateImageFile(file);
-    if (problem) {
-      setMessage({ kind: "error", text: problem });
-      return;
-    }
-    await run(
-      p.id,
-      async () => {
-        const out = await uploadProductImages(p.id, [file]);
-        if (out.unauthorized) throw new ApiError(401, "Sessão expirada.");
-        if (out.failed.length > 0) throw new ApiError(400, out.failed[0].message);
-      },
-      "Foto adicionada.",
-    );
+  function toggleGallery(id: string) {
+    setGalleryOpen((prev) => {
+      const next = new Set(prev);
+      if (!next.delete(id)) next.add(id);
+      return next;
+    });
   }
 
-  function removeImage(p: ApiProduct) {
-    // Provisório até a tela da galeria: remove a capa (a primeira foto); a seguinte passa a ser a capa.
-    return run(p.id, () => removeProductImage(p.id, p.images[0].key), "Capa removida.");
+  /** Adiciona várias fotos: respeita o limite, mostra cada problema e informa o que falhou por nome de arquivo. */
+  async function handleAddPhotos(e: ChangeEvent<HTMLInputElement>, p: ApiProduct) {
+    const files = Array.from(e.target.files ?? []);
+    e.target.value = ""; // permite escolher o mesmo arquivo de novo depois
+    if (files.length === 0) return;
+    const { accepted, problems } = planUploads(files, p.images.length);
+    if (accepted.length === 0) {
+      setMessage({ kind: "error", text: problems.join(" ") });
+      return;
+    }
+
+    setBusy(p.id);
+    setMessage(null);
+    try {
+      const out = await uploadProductImages(p.id, accepted);
+      if (out.unauthorized) {
+        router.replace("/admin/login");
+        return;
+      }
+      const issues = [...problems, ...out.failed.map((f) => `${f.name}: ${f.message}`)];
+      const added = out.sent === 1 ? "1 foto adicionada." : `${out.sent} fotos adicionadas.`;
+      if (issues.length === 0) setMessage({ kind: "ok", text: added });
+      else setMessage({ kind: "error", text: `${out.sent > 0 ? `${added} ` : ""}Não enviadas: ${issues.join(" ")}` });
+      if (out.sent > 0) startTransition(() => router.refresh());
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  function reorder(p: ApiProduct, keys: string[], okText: string) {
+    return run(p.id, () => reorderProductImages(p.id, keys), okText);
+  }
+
+  function removePhoto(p: ApiProduct, key: string) {
+    return run(p.id, () => removeProductImage(p.id, key), "Foto removida.");
   }
 
   function toggleActive(p: ApiProduct) {
@@ -270,17 +291,9 @@ export function AdminProducts({ products }: { products: ApiProduct[] }) {
                 Ajustar estoque
               </button>
 
-              <div className="admin-row__actions">
-                <label className="link-btn file-btn">
-                  {p.images.length > 0 ? "Adicionar foto" : "Enviar foto"}
-                  <input type="file" className="sr-only" accept="image/jpeg,image/png,image/webp" disabled={busy === p.id || p.images.length >= MAX_IMAGES} onChange={(e) => handleReplaceImage(e, p)} />
-                </label>
-                {p.images.length > 0 && (
-                  <button type="button" className="link-btn" disabled={busy === p.id} onClick={() => removeImage(p)}>
-                    Remover capa
-                  </button>
-                )}
-              </div>
+              <button type="button" className="btn btn--outline" aria-expanded={galleryOpen.has(p.id)} aria-controls={`fotos-${p.id}`} onClick={() => toggleGallery(p.id)}>
+                Fotos ({p.images.length}/{MAX_IMAGES})
+              </button>
 
               {adjusting === p.id && (
                 <form className="admin-form admin-form--inline" onSubmit={(e) => handleAdjust(e, p)}>
@@ -307,6 +320,53 @@ export function AdminProducts({ products }: { products: ApiProduct[] }) {
                     Salvar
                   </button>
                 </form>
+              )}
+
+              {galleryOpen.has(p.id) && (
+                <div id={`fotos-${p.id}`} className="gallery-admin" role="group" aria-label={`Fotos de ${p.name}`}>
+                  {p.images.length === 0 ? (
+                    <p className="gallery-admin__empty">Este produto ainda não tem fotos. A primeira que você enviar vira a capa.</p>
+                  ) : (
+                    <ol className="gallery-admin__grid">
+                      {p.images.map((img, i) => {
+                        const keys = p.images.map((x) => x.key);
+                        const n = i + 1;
+                        const who = `${p.name}, foto ${n}`;
+                        return (
+                          <li key={img.key} className="gallery-admin__item">
+                            <div className="gallery-admin__img">
+                              {imageSrc(img.url) ? <img src={imageSrc(img.url)} alt={`Foto ${n} de ${p.name}`} loading="lazy" /> : <span>Sem prévia</span>}
+                              {i === 0 && <span className="gallery-admin__badge">Capa</span>}
+                            </div>
+                            <div className="gallery-admin__btns">
+                              {i > 0 && (
+                                <button type="button" className="link-btn" disabled={busy === p.id} aria-label={`Tornar capa: ${who}`} onClick={() => reorder(p, makeCover(keys, img.key), "Capa atualizada.")}>
+                                  Tornar capa
+                                </button>
+                              )}
+                              <button type="button" className="link-btn" disabled={busy === p.id || i === 0} aria-label={`Mover para a esquerda: ${who}`} onClick={() => reorder(p, moveKey(keys, img.key, -1), "Ordem atualizada.")}>
+                                <span aria-hidden="true">←</span> Mover para a esquerda
+                              </button>
+                              <button type="button" className="link-btn" disabled={busy === p.id || i === p.images.length - 1} aria-label={`Mover para a direita: ${who}`} onClick={() => reorder(p, moveKey(keys, img.key, 1), "Ordem atualizada.")}>
+                                Mover para a direita <span aria-hidden="true">→</span>
+                              </button>
+                              <button type="button" className="link-btn" disabled={busy === p.id} aria-label={`Remover: ${who}`} onClick={() => removePhoto(p, img.key)}>
+                                Remover
+                              </button>
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ol>
+                  )}
+                  <label className={`btn btn--outline file-btn${busy === p.id || p.images.length >= MAX_IMAGES ? " is-disabled" : ""}`}>
+                    Adicionar fotos
+                    <input type="file" className="sr-only" multiple accept="image/jpeg,image/png,image/webp" disabled={busy === p.id || p.images.length >= MAX_IMAGES} aria-label={`Adicionar fotos: ${p.name}`} onChange={(e) => handleAddPhotos(e, p)} />
+                  </label>
+                  <small className="field__help">
+                    {p.images.length >= MAX_IMAGES ? `Limite de ${MAX_IMAGES} fotos atingido. Remova uma para enviar outra.` : `JPEG, PNG ou WebP, até 5 MB cada. Cabem mais ${MAX_IMAGES - p.images.length}.`}
+                  </small>
+                </div>
               )}
             </li>
           ))}
