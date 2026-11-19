@@ -93,12 +93,37 @@ button { font: inherit; }
 .header {
   max-width: var(--container); margin: 0 auto; padding: 24px var(--gutter);
   display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 32px;
+  position: relative;
 }
 .header__logo img { width: 72px; height: 72px; border-radius: var(--radius-pill); }
 .header__nav { display: flex; flex-wrap: wrap; gap: 8px 28px; font-weight: 600; font-size: 15px; }
 .header__nav a { color: var(--tinta); text-decoration: none; padding: 10px 0; }
 .header__nav a:hover { color: var(--rosa-escuro); }
 .header__actions { display: flex; gap: 4px; }
+
+/* Submenu Loja */
+.shop-menu { position: relative; display: flex; align-items: center; gap: 2px; }
+.shop-menu__toggle {
+  width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
+  color: var(--tinta); background: transparent; border: 0; border-radius: var(--radius-pill); cursor: pointer;
+}
+.shop-menu__toggle[aria-expanded="true"] svg { transform: rotate(180deg); }
+.shop-menu__panel {
+  position: absolute; top: 100%; left: 0; z-index: 20; min-width: 220px; margin: 4px 0 0; padding: 8px; list-style: none;
+  background: var(--branco); border-radius: var(--radius-sm); box-shadow: 0 12px 32px rgba(27, 34, 56, 0.16);
+}
+.shop-menu__panel[hidden] { display: none; }
+.header__nav .shop-menu__panel a {
+  display: flex; align-items: center; min-height: 44px; padding: 0 16px; border-radius: 12px;
+  color: var(--tinta); text-decoration: none;
+}
+.header__nav .shop-menu__panel a:hover { background: var(--rosa-claro); color: var(--tinta); }
+.header__nav .shop-menu__panel a[aria-current="page"] { background: var(--tinta); color: var(--branco); }
+.shop-menu__sep { height: 1px; margin: 6px 8px; background: var(--rosa-claro); }
+@media (max-width: 640px) {
+  .shop-menu { position: static; }
+  .shop-menu__panel { left: 0; right: 0; min-width: 0; margin-top: 0; }
+}
 
 /* ---------- Hero ---------- */
 .hero { padding-top: 40px; padding-bottom: 96px; }

@@ -1,8 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Suspense } from "react";
 import { navLinks } from "@/lib/nav";
 import { CartButton } from "./cart/CartButton";
 import { NavLink } from "./NavLink";
+import { ShopMenu } from "./ShopMenu";
 import { SearchIcon } from "./icons";
 
 export function Header() {
@@ -12,6 +14,9 @@ export function Header() {
         <Image src="/logo-trendkids.webp" alt="Trend Kids JP" width={72} height={72} priority />
       </Link>
       <nav aria-label="Principal" className="header__nav">
+        <Suspense fallback={<Link href="/loja">Loja</Link>}>
+          <ShopMenu />
+        </Suspense>
         {navLinks.map((l) => (
           <NavLink key={l.label} href={l.href}>
             {l.label}
