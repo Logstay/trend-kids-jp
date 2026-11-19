@@ -19,9 +19,6 @@ export type Product = {
   images?: string[];
 };
 
-export const featuredFilters = ["Todos", "Classic", "Com luz", "Sandálias", "Charms"] as const;
-export type FeaturedFilter = (typeof featuredFilters)[number];
-
 export const categories = [
   { label: "Classic", photo: "Foto: Crocs Classic em várias cores", tone: "rosa" },
   { label: "Com luz", photo: "Foto: Crocs com luz na sola", tone: "rosa" },

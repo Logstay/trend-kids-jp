@@ -1,41 +1,17 @@
-"use client";
-
 import Link from "next/link";
-import { useState } from "react";
-import { listView } from "@/lib/empty";
-import { featuredFilters, type FeaturedFilter, type Product } from "@/lib/catalog";
+import type { Product } from "@/lib/catalog";
 import { AddToCart } from "./cart/AddToCart";
-import { EmptyState } from "./EmptyState";
 import { BagIcon } from "./icons";
 import { Photo } from "./Photo";
 
 export function Featured({ products }: { products: Product[] }) {
-  const [filter, setFilter] = useState<FeaturedFilter>("Todos");
-  const items = (filter === "Todos" ? products : products.filter((p) => p.category === filter)).slice(0, 4);
+  const items = products.slice(0, 4);
 
   return (
     <section className="container featured">
       <div className="featured__head">
         <h2 className="display h2">Coleções em destaque</h2>
-        <div role="group" aria-label="Filtrar coleção" className="chips">
-          {featuredFilters.map((f) => (
-            <button key={f} type="button" className="chip" aria-pressed={filter === f} onClick={() => setFilter(f)}>
-              {f}
-            </button>
-          ))}
-        </div>
       </div>
-      {listView(items, filter !== "Todos") === "empty-filtered" && (
-        <EmptyState role="status" as="h3" title={`Nada em “${filter}” por enquanto`}
-          actions={
-            <button type="button" className="btn btn--outline" onClick={() => setFilter("Todos")}>
-              Ver todos os produtos
-            </button>
-          }
-        >
-          Esses pares acabaram ou ainda estão chegando. Dá uma olhada nas outras coleções.
-        </EmptyState>
-      )}
       <div className="featured__grid">
         {items.map((p) => (
           <article key={p.name} className="product">
@@ -58,6 +34,11 @@ export function Featured({ products }: { products: Product[] }) {
             </div>
           </article>
         ))}
+      </div>
+      <div className="featured__more">
+        <Link href="/loja" className="btn btn--outline">
+          Ver todos os modelos
+        </Link>
       </div>
     </section>
   );
