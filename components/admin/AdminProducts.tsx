@@ -15,8 +15,10 @@ type Message = { kind: "ok" | "error"; text: string };
 
 export function AdminProducts({ products }: { products: ApiProduct[] }) {
   const router = useRouter();
-  const [, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
   const [busy, setBusy] = useState<string | null>(null);
+  /** Trava a linha enquanto a ação roda E até o refresh terminar (senão um clique rápido usaria a lista antiga). */
+  const locked = (id: string) => busy === id || isPending;
   const [message, setMessage] = useState<Message | null>(null);
   const [adjusting, setAdjusting] = useState<string | null>(null);
   // Painéis de fotos abertos, por id de produto: sobrevive ao router.refresh (o id não muda).
@@ -267,7 +269,9 @@ export function AdminProducts({ products }: { products: ApiProduct[] }) {
         )}
 
         <ul className="admin-list">
-          {products.map((p) => (
+          {products.map((p) => {
+            const keys = p.images.map((x) => x.key);
+            return (
             <li key={p.id} className="admin-row admin-row--product">
               <div className="admin-thumb">
                 {imageSrc(p.image) ? <img src={imageSrc(p.image)} alt={`Foto de ${p.name}`} loading="lazy" /> : <span>Sem foto</span>}
@@ -283,7 +287,7 @@ export function AdminProducts({ products }: { products: ApiProduct[] }) {
                 {p.stock} em estoque
               </span>
 
-              <button type="button" role="switch" aria-checked={p.active} className="switch" disabled={busy === p.id} onClick={() => toggleActive(p)}>
+              <button type="button" role="switch" aria-checked={p.active} className="switch" disabled={locked(p.id)} onClick={() => toggleActive(p)}>
                 {p.active ? "Na loja" : "Oculto"}
               </button>
 
@@ -316,20 +320,20 @@ export function AdminProducts({ products }: { products: ApiProduct[] }) {
                       ))}
                     </select>
                   </div>
-                  <button type="submit" className="btn btn--tinta" disabled={busy === p.id}>
+                  <button type="submit" className="btn btn--tinta" disabled={locked(p.id)}>
                     Salvar
                   </button>
                 </form>
               )}
 
-              {galleryOpen.has(p.id) && (
-                <div id={`fotos-${p.id}`} className="gallery-admin" role="group" aria-label={`Fotos de ${p.name}`}>
+              <div id={`fotos-${p.id}`} className="gallery-admin" role="group" aria-label={`Fotos de ${p.name}`} hidden={!galleryOpen.has(p.id)}>
+                {galleryOpen.has(p.id) && (
+                  <>
                   {p.images.length === 0 ? (
                     <p className="gallery-admin__empty">Este produto ainda não tem fotos. A primeira que você enviar vira a capa.</p>
                   ) : (
                     <ol className="gallery-admin__grid">
                       {p.images.map((img, i) => {
-                        const keys = p.images.map((x) => x.key);
                         const n = i + 1;
                         const who = `${p.name}, foto ${n}`;
                         return (
@@ -340,17 +344,17 @@ export function AdminProducts({ products }: { products: ApiProduct[] }) {
                             </div>
                             <div className="gallery-admin__btns">
                               {i > 0 && (
-                                <button type="button" className="link-btn" disabled={busy === p.id} aria-label={`Tornar capa: ${who}`} onClick={() => reorder(p, makeCover(keys, img.key), "Capa atualizada.")}>
+                                <button type="button" className="link-btn" disabled={locked(p.id)} aria-label={`Tornar capa: ${who}`} onClick={() => reorder(p, makeCover(keys, img.key), "Capa atualizada.")}>
                                   Tornar capa
                                 </button>
                               )}
-                              <button type="button" className="link-btn" disabled={busy === p.id || i === 0} aria-label={`Mover para a esquerda: ${who}`} onClick={() => reorder(p, moveKey(keys, img.key, -1), "Ordem atualizada.")}>
+                              <button type="button" className="link-btn" disabled={locked(p.id) || i === 0} aria-label={`Mover para a esquerda: ${who}`} onClick={() => reorder(p, moveKey(keys, img.key, -1), "Ordem atualizada.")}>
                                 <span aria-hidden="true">←</span> Mover para a esquerda
                               </button>
-                              <button type="button" className="link-btn" disabled={busy === p.id || i === p.images.length - 1} aria-label={`Mover para a direita: ${who}`} onClick={() => reorder(p, moveKey(keys, img.key, 1), "Ordem atualizada.")}>
+                              <button type="button" className="link-btn" disabled={locked(p.id) || i === p.images.length - 1} aria-label={`Mover para a direita: ${who}`} onClick={() => reorder(p, moveKey(keys, img.key, 1), "Ordem atualizada.")}>
                                 Mover para a direita <span aria-hidden="true">→</span>
                               </button>
-                              <button type="button" className="link-btn" disabled={busy === p.id} aria-label={`Remover: ${who}`} onClick={() => removePhoto(p, img.key)}>
+                              <button type="button" className="link-btn" disabled={locked(p.id)} aria-label={`Remover: ${who}`} onClick={() => removePhoto(p, img.key)}>
                                 Remover
                               </button>
                             </div>
@@ -359,17 +363,19 @@ export function AdminProducts({ products }: { products: ApiProduct[] }) {
                       })}
                     </ol>
                   )}
-                  <label className={`btn btn--outline file-btn${busy === p.id || p.images.length >= MAX_IMAGES ? " is-disabled" : ""}`}>
+                  <label className={`btn btn--outline file-btn${locked(p.id) || p.images.length >= MAX_IMAGES ? " is-disabled" : ""}`}>
                     Adicionar fotos
-                    <input type="file" className="sr-only" multiple accept="image/jpeg,image/png,image/webp" disabled={busy === p.id || p.images.length >= MAX_IMAGES} aria-label={`Adicionar fotos: ${p.name}`} onChange={(e) => handleAddPhotos(e, p)} />
+                    <input type="file" className="sr-only" multiple accept="image/jpeg,image/png,image/webp" disabled={locked(p.id) || p.images.length >= MAX_IMAGES} aria-label={`Adicionar fotos: ${p.name}`} onChange={(e) => handleAddPhotos(e, p)} />
                   </label>
                   <small className="field__help">
                     {p.images.length >= MAX_IMAGES ? `Limite de ${MAX_IMAGES} fotos atingido. Remova uma para enviar outra.` : `JPEG, PNG ou WebP, até 5 MB cada. Cabem mais ${MAX_IMAGES - p.images.length}.`}
                   </small>
-                </div>
-              )}
+                  </>
+                )}
+              </div>
             </li>
-          ))}
+            );
+          })}
         </ul>
       </section>
     </>
