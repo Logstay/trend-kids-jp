@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MIN_PRODUCTS_FOR_SECTIONS, pickHeroProduct, showsCollections, showsTrending } from "./landing";
+import { MIN_PRODUCTS_FOR_SECTIONS, launchesHref, pickHeroProduct, showsCollections, showsTrending } from "./landing";
 
 describe("limites da landing", () => {
   it("o mínimo é 4", () => expect(MIN_PRODUCTS_FOR_SECTIONS).toBe(4));
@@ -40,5 +40,14 @@ describe("pickHeroProduct", () => {
     const copy = structuredClone(items);
     pickHeroProduct(items, () => 0.3);
     expect(items).toEqual(copy);
+  });
+});
+
+describe("launchesHref", () => {
+  it.each([0, 4, 8])("com %i produtos mantém a âncora #novidades", (n) => {
+    expect(launchesHref(n)).toBe("#novidades");
+  });
+  it.each([1, 3])("com %i produtos leva para a loja", (n) => {
+    expect(launchesHref(n)).toBe("/loja?novidades=1");
   });
 });

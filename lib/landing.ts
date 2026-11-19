@@ -16,3 +16,11 @@ export function pickHeroProduct<T extends { image?: string }>(items: readonly T[
   const index = Math.min(Math.floor(random() * withPhoto.length), withPhoto.length - 1);
   return withPhoto[index];
 }
+
+/**
+ * Destino do botão "Lançamentos" do hero. A âncora #novidades só existe quando a seção de tendências aparece
+ * (ou na tela de loja vazia/erro, com 0 produtos); com 1 a 3 produtos ela não existe, então vai para a loja.
+ */
+export function launchesHref(productCount: number): string {
+  return productCount > 0 && !showsTrending(productCount) ? "/loja?novidades=1" : "#novidades";
+}

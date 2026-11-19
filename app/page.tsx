@@ -6,7 +6,7 @@ import { Hero } from "@/components/Hero";
 import { LandingEmpty } from "@/components/LandingEmpty";
 import { fromPriceLabel, getShowcase } from "@/lib/api";
 import { listView, showsCategories } from "@/lib/empty";
-import { pickHeroProduct, showsCollections, showsTrending } from "@/lib/landing";
+import { launchesHref, pickHeroProduct, showsCollections, showsTrending } from "@/lib/landing";
 import { Story } from "@/components/Story";
 import { Trending } from "@/components/Trending";
 
@@ -21,7 +21,10 @@ export default async function Home() {
     <>
       <Header />
       <main>
-        <Hero fromPrice={source === "api" ? fromPriceLabel(items) : null} product={hero} />
+        <Hero
+          fromPrice={source === "api" ? fromPriceLabel(items) : null} product={hero}
+          launchesHref={launchesHref(source === "error" ? 0 : items.length)}
+        />
         {showsCategories(view) && showsCollections(items.length) && <Categories />}
         {source === "error" ? (
           <LandingEmpty reason="error" />
