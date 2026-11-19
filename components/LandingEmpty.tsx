@@ -3,8 +3,6 @@ import { WhatsAppIcon } from "./icons";
 import { WhatsAppCta } from "./WhatsAppCta";
 import { getSettings } from "@/lib/settings";
 
-const coming = ["Classic", "Com luz", "Sandálias", "Forrados", "Charms"];
-
 type Props = { reason: "empty" | "error" };
 
 /** Vitrine da landing sem produtos: "empty" = loja ainda vazia; "error" = o back não respondeu. */
@@ -32,7 +30,7 @@ export async function LandingEmpty({ reason }: Props) {
   }
   return (
     <section id="novidades" className="container landing-empty">
-      <EmptyState variant="landing" eyebrow="Em breve" title="A vitrine está sendo montada" as="h2" className="empty--has-chips"
+      <EmptyState variant="landing" eyebrow="Em breve" title="A vitrine está sendo montada" as="h2"
         actions={
           <>
             <WhatsAppCta message="Olá! Quero saber o que acabou de chegar de Crocs infantis." className="btn btn--lg btn--tinta">
@@ -47,13 +45,6 @@ export async function LandingEmpty({ reason }: Props) {
         }
       >
         Estamos separando cada par com carinho. Chama a gente no WhatsApp e mostramos o que acabou de chegar.
-        <span className="empty__chips" aria-label="Coleções que estão chegando">
-          {coming.map((c) => (
-            <span key={c} className="empty__chip">
-              {c}
-            </span>
-          ))}
-        </span>
       </EmptyState>
     </section>
   );

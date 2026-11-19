@@ -5,18 +5,20 @@ import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
 import { LandingEmpty } from "@/components/LandingEmpty";
 import { fromPriceLabel, getShowcase } from "@/lib/api";
+import { listView, showsCategories } from "@/lib/empty";
 import { Story } from "@/components/Story";
 import { Trending } from "@/components/Trending";
 
 export default async function Home() {
   const { items, source } = await getShowcase(8);
+  const view = listView(source === "error" ? null : items, false);
 
   return (
     <>
       <Header />
       <main>
         <Hero fromPrice={source === "api" ? fromPriceLabel(items) : null} />
-        <Categories />
+        {showsCategories(view) && <Categories />}
         {source === "error" ? (
           <LandingEmpty reason="error" />
         ) : items.length === 0 ? (

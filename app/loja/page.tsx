@@ -8,7 +8,7 @@ import { WhatsAppIcon } from "@/components/icons";
 import { WhatsAppCta } from "@/components/WhatsAppCta";
 import { Photo } from "@/components/Photo";
 import { fetchProducts, toProduct } from "@/lib/api";
-import { listView } from "@/lib/empty";
+import { listView, showsCategories } from "@/lib/empty";
 import { featuredFilters } from "@/lib/catalog";
 import { getSettings } from "@/lib/settings";
 
@@ -38,19 +38,21 @@ export default async function Loja({ searchParams }: Props) {
   return (
     <>
       <Header />
-      <main className="container" style={{ paddingBlock: "48px 96px" }}>
+      <main className="container" style={{ paddingBlock: "48px 96px", display: "grid", gap: 24 }}>
         <h1 className="display h2">Loja</h1>
 
-        <nav aria-label="Filtrar por categoria" className="chips" style={{ marginBlock: 24 }}>
-          <Link href="/loja" className="chip" aria-current={active ? undefined : "page"}>
-            Todos
-          </Link>
-          {categories.map((c) => (
-            <Link key={c} href={`/loja?categoria=${encodeURIComponent(c)}`} className="chip" aria-current={active === c ? "page" : undefined}>
-              {c}
+        {showsCategories(view) && (
+          <nav aria-label="Filtrar por categoria" className="chips">
+            <Link href="/loja" className="chip" aria-current={active ? undefined : "page"}>
+              Todos
             </Link>
-          ))}
-        </nav>
+            {categories.map((c) => (
+              <Link key={c} href={`/loja?categoria=${encodeURIComponent(c)}`} className="chip" aria-current={active === c ? "page" : undefined}>
+                {c}
+              </Link>
+            ))}
+          </nav>
+        )}
 
         {view === "error" && (
           <EmptyState role="alert" eyebrow="Ops" title="Não consegui carregar a vitrine agora"
@@ -119,7 +121,7 @@ export default async function Loja({ searchParams }: Props) {
         )}
 
         {(view === "list" || view === "empty-filtered") && (
-          <div className="hero__ctas" style={{ marginTop: 48 }}>
+          <div className="hero__ctas" style={{ marginTop: 24 }}>
             <WhatsAppCta message="Olá! Quero ver os Crocs infantis disponíveis." className="btn btn--lg btn--tinta">
                   <WhatsAppIcon /> Pedir pelo WhatsApp
                 </WhatsAppCta>

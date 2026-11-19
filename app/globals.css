@@ -335,11 +335,6 @@ button { font: inherit; }
   right: 38%; top: -70px; background: url("/logo-trendkids.webp") center / 112% no-repeat;
   mix-blend-mode: multiply; opacity: 0.14; transform: rotate(14deg); pointer-events: none;
 }
-.empty__chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.empty__chip {
-  font-size: 14px; font-weight: 700; padding: 8px 16px; border-radius: var(--radius-pill);
-  background: var(--creme); color: var(--rosa-escuro);
-}
 
 @media (max-width: 720px) {
   .empty--compact { padding: 32px 24px; min-height: 0; }

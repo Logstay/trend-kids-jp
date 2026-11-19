@@ -10,3 +10,11 @@ export function listView(items: readonly unknown[] | null, filtered: boolean): L
   if (items.length > 0) return "list";
   return filtered ? "empty-filtered" : "empty";
 }
+
+/**
+ * Os nomes das categorias (filtros, blocos de coleção) só aparecem quando há o que filtrar. Com a loja vazia ou com
+ * falha ao carregar, a tela mostra só o estado vazio. No "filtro sem resultado" ficam, para dar para trocar de categoria.
+ */
+export function showsCategories(view: ListView): boolean {
+  return view === "list" || view === "empty-filtered";
+}
