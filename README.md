@@ -24,6 +24,15 @@ NEXT_PUBLIC_API_URL=http://localhost:8080   # padrão
 - Landing: busca 8 produtos. **API vazia** = estado vazio "A vitrine está sendo montada"; **API fora do ar** = estado de erro "Não conseguimos carregar a vitrine". Nunca há produto de mentira.
 - `/loja?categoria=Classic`: lista da API; com a API fora do ar mostra o estado de erro, com "Tentar de novo" e WhatsApp.
 
+## Menu da Loja
+
+O cabeçalho tem `Loja ▾`, `Nossa história` e `Contato`. "Loja" é um link para `/loja`; a seta ao lado abre o submenu (por clique, Enter ou Espaço, nunca por hover; fecha com Esc, clique fora, ao escolher um item e ao trocar de página).
+
+- Itens: Todos os modelos, Novidades, Classic, Com luz, Sandálias, Charms, Forrados. O submenu **sempre lista as categorias**, mesmo com a loja vazia.
+- Filtros por URL, um por vez: `/loja?categoria=Classic` ou `/loja?novidades=1` (se vierem os dois, vale Novidades; categoria inválida mostra a loja inteira).
+- **Novidades = produtos criados nos últimos 14 dias** (o mesmo critério do selo "Novidade"), filtrados no servidor do Next, sem mudança na API.
+- A landing não tem mais botões de filtro: há o link "Ver todos os modelos".
+
 ## Como ver as chamadas ao back
 
 O navegador quase nunca chama `localhost:8080` direto, então a aba Network **não** mostra a API:
