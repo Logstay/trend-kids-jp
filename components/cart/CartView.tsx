@@ -140,6 +140,11 @@ function Confirmation({ order }: { order: ApiOrder }) {
       <p className="muted">
         Seu código é <strong className="confirm__code">{order.code}</strong>. Guarde: a loja usa esse código para falar com você sobre o pedido.
       </p>
+      <p>
+        <Link href={`/pedido?codigo=${encodeURIComponent(order.code)}`} className="link-btn">
+          Acompanhar este pedido
+        </Link>
+      </p>
 
       <ul className="admin-list">
         {order.items.map((i) => (

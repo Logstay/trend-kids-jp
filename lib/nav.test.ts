@@ -30,6 +30,10 @@ describe("links de navegação", () => {
     expect(navLinks.map((l) => l.label)).toEqual(["Nossa história", "Contato"]);
   });
 
+  it("o rodapé tem Acompanhar pedido logo após Loja", () => {
+    expect(footerLinks.map((l) => l.label)).toEqual(["Loja", "Acompanhar pedido", "Nossa história", "Guia de tamanhos e trocas"]);
+  });
+
   it("não repete destinos nem rótulos", () => {
     const labels = navLinks.map((l) => l.label);
     expect(new Set(labels).size).toBe(labels.length);

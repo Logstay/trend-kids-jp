@@ -20,6 +20,7 @@ export const navLinks: NavLink[] = [
 
 export const footerLinks: NavLink[] = [
   { label: "Loja", href: "/loja" },
+  { label: "Acompanhar pedido", href: "/pedido" },
   { label: "Nossa história", href: homeSection("historia") },
   { label: "Guia de tamanhos e trocas", href: "#contato" },
 ];
