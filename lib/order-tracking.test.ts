@@ -1,12 +1,16 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { apiRequest } from "./admin";
 import {
   isValidOrderCode,
+  lookupOrder,
   normalizeOrderCode,
   orderProgress,
   orderStatusLabel,
   orderSteps,
   parseCodeParam,
 } from "./order-tracking";
+
+vi.mock("./admin", () => ({ apiRequest: vi.fn() }));
 
 describe("orderStatusLabel", () => {
   it("traduz cada status conhecido", () => {
@@ -121,5 +125,28 @@ describe("parseCodeParam", () => {
 
   it("retorna vazio para lista vazia", () => {
     expect(parseCodeParam([])).toBe("");
+  });
+});
+
+describe("lookupOrder", () => {
+  beforeEach(() => {
+    vi.mocked(apiRequest).mockReset();
+  });
+
+  it("normaliza o código e envia o telefone sem alteração", async () => {
+    vi.mocked(apiRequest).mockResolvedValue({});
+    await lookupOrder(" tkabcd2345 ", "(83) 99999-1234");
+    expect(apiRequest).toHaveBeenCalledTimes(1);
+    expect(apiRequest).toHaveBeenCalledWith("POST", "/v1/orders/lookup", {
+      code: "TKABCD2345",
+      phone: "(83) 99999-1234",
+    });
+  });
+
+  it("rejeita código inválido sem chamar a API", async () => {
+    await expect(lookupOrder("TK0OIL1234", "(83) 99999-1234")).rejects.toThrow(
+      new Error("Código inválido"),
+    );
+    expect(apiRequest).not.toHaveBeenCalled();
   });
 });

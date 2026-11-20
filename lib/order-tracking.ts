@@ -1,3 +1,6 @@
+import { apiRequest } from "./admin";
+import type { ApiOrder } from "./api";
+
 export type OrderStatus = "new" | "paid" | "shipped" | "delivered";
 
 const statusLabels = new Map<string, string>([
@@ -37,4 +40,12 @@ export function isValidOrderCode(code: string): boolean {
 export function parseCodeParam(value: string | string[] | undefined): string {
   const first = Array.isArray(value) ? value[0] : value;
   return normalizeOrderCode(first ?? "");
+}
+
+export async function lookupOrder(code: string, phone: string): Promise<ApiOrder> {
+  const normalized = normalizeOrderCode(code);
+  if (!isValidOrderCode(normalized)) {
+    throw new Error("Código inválido");
+  }
+  return apiRequest<ApiOrder>("POST", "/v1/orders/lookup", { code: normalized, phone });
 }
