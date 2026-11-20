@@ -30,7 +30,7 @@ export function orderProgress(status: string): number {
 }
 
 export function normalizeOrderCode(raw: string): string {
-  return raw.trim().toUpperCase();
+  return raw.replace(/\s+/g, "").toUpperCase();
 }
 
 export function isValidOrderCode(code: string): boolean {

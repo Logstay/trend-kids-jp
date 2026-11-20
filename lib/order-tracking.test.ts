@@ -63,6 +63,11 @@ describe("normalizeOrderCode", () => {
     expect(normalizeOrderCode("\ttkabcd2345\n")).toBe("TKABCD2345");
   });
 
+  it("remove espaços internos", () => {
+    expect(normalizeOrderCode("TKAB CD2345")).toBe("TKABCD2345");
+    expect(normalizeOrderCode("tkab\tcd2345\n")).toBe("TKABCD2345");
+  });
+
   it("mantém código já normalizado", () => {
     expect(normalizeOrderCode("TKABCD2345")).toBe("TKABCD2345");
   });

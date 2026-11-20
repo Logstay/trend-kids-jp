@@ -47,11 +47,11 @@ export function OrderTracking({ initialCode }: { initialCode: string }) {
       <form className="admin-form" onSubmit={handleSubmit}>
         <div className="field">
           <label htmlFor="code">Código do pedido</label>
-          <input id="code" name="code" value={code} onChange={(e) => setCode(e.target.value)} autoComplete="off" maxLength={12} />
+          <input id="code" value={code} onChange={(e) => setCode(e.target.value)} autoComplete="off" maxLength={12} />
         </div>
         <div className="field">
           <label htmlFor="phone">WhatsApp / telefone com DDD</label>
-          <input id="phone" name="phone" type="tel" inputMode="tel" autoComplete="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
+          <input id="phone" type="tel" inputMode="tel" autoComplete="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
         </div>
         <button type="submit" className="btn btn--lg btn--tinta" disabled={loading}>
           {loading ? "Consultando…" : "Consultar pedido"}
@@ -70,7 +70,7 @@ export function OrderTracking({ initialCode }: { initialCode: string }) {
       )}
 
       {order && (
-        <section aria-labelledby="pedido-status" className="admin-panel tracking__result">
+        <section aria-labelledby="pedido-status" className="admin-panel tracking__result" aria-live="polite">
           <h2 id="pedido-status" className="h3">Pedido {order.code}</h2>
           <p className="tracking__status"><strong>{orderStatusLabel(order.status)}</strong></p>
           {!cancelled && (
@@ -87,8 +87,8 @@ export function OrderTracking({ initialCode }: { initialCode: string }) {
             </ol>
           )}
           <ul className="tracking__items">
-            {order.items.map((item) => (
-              <li key={item.product_id}>
+            {order.items.map((item, index) => (
+              <li key={`${item.product_id}-${index}`}>
                 {item.quantity}x {item.name} <span>{formatPrice(item.total_cents)}</span>
               </li>
             ))}
