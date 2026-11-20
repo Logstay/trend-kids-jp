@@ -434,6 +434,7 @@ button { font: inherit; }
 .picker__item {
   display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 56px; padding: 12px 20px;
   background: var(--branco); border: 2px solid var(--tinta); border-radius: var(--radius-sm); text-decoration: none; color: var(--tinta);
+  width: 100%; font: inherit; cursor: pointer; text-align: left;
 }
 .picker__item:hover { background: var(--tinta); color: var(--branco); }
 .picker__item:focus-visible { outline: 3px solid var(--azul-escuro); outline-offset: 2px; }
@@ -453,6 +454,7 @@ button { font: inherit; }
 }
 .admin-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .photo-preview { width: 120px; height: 120px; object-fit: cover; border-radius: var(--radius-sm); border: 2px solid var(--rosa-claro); margin-top: 8px; }
+.photo-previews { display: flex; flex-wrap: wrap; gap: 8px; }
 .file-btn { cursor: pointer; display: inline-flex; align-items: center; position: relative; }
 .file-btn:focus-within { outline: 3px solid var(--azul-escuro); outline-offset: 2px; border-radius: 8px; }
 @media (max-width: 720px) { .admin-row--product { grid-template-columns: 64px 1fr; } .admin-row--product .admin-row__main { grid-column: 2; } .admin-row--product > .btn, .admin-row--product > .switch, .admin-row--product > .admin-row__stock { grid-column: 1 / -1; justify-self: start; } .admin-row--product > .admin-form { grid-column: 1 / -1; } }

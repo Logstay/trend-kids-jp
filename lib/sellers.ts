@@ -95,3 +95,14 @@ export function whatsappTarget(sellers: Seller[], settings: StoreSettings, messa
   if (hasWhatsApp(settings)) return { kind: "direct", href: `https://wa.me/${settings.whatsapp}?text=${encodeURIComponent(message)}` };
   return { kind: "none", href: "#contato" };
 }
+
+/**
+ * Link do WhatsApp que o checkout abre sozinho depois do pedido: a vendedora que o cliente escolheu no formulário.
+ * Sem escolha válida, segue a regra de `whatsappTarget` (1ª vendedora, ou contato da loja, ou âncora).
+ */
+export function checkoutWhatsAppHref(sellers: Seller[], settings: StoreSettings, message: string, sellerId: string): string {
+  const chosen = sellers.find((s) => s.id === sellerId);
+  if (chosen) return sellerHref(chosen, message);
+  const target = whatsappTarget(sellers, settings, message);
+  return target.kind === "choose" ? target.options[0].href : target.href;
+}

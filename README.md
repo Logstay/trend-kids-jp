@@ -13,6 +13,15 @@ npm test           # testes (vitest)
 
 > `npm run export` (site 100% estático) **não funciona mais**: a `/loja` filtra por URL e precisa de servidor (decisão D6 da spec).
 
+### Debug no VS Code
+
+As configs ficam em `/home/logstay/studies/.vscode/launch.json`, junto com as de outros projetos (abra a pasta `studies` no VS Code, aba "Run and Debug"):
+- **Trend Kids Site: servidor Next**: roda `npm run dev` num terminal de depuração; breakpoints em rotas, `page.tsx` e componentes de servidor.
+- **Trend Kids Site: navegador**: abre o Chrome em `localhost:3000` com breakpoints no código do cliente (Chrome precisa estar instalado no mesmo sistema do VS Code).
+- **Trend Kids: API + site (tudo)**: sobe a API e o site juntos.
+
+Para ver as chamadas à API, suba a API com a config **Trend Kids API: servidor (debug)**.
+
 ## Back-end (API em Go)
 
 Os produtos vêm da API (`trend-kids-api`, repositório separado). Defina a URL no ambiente:
@@ -74,7 +83,7 @@ O **WhatsApp de contato** (aba "Contato da loja") e as **vendedoras** são coisa
 
 ## Foto do produto
 
-No `/admin` o produto tem **uma foto principal** (JPEG, PNG ou WebP, até 5 MB): enviada ao criar ou depois pela lista (Enviar/Trocar/Remover foto).
+No `/admin` o produto tem **até 8 fotos** (JPEG, PNG ou WebP, até 5 MB cada). Dá para escolher várias ao criar o produto, e depois pela galeria da lista ("Fotos"): adicionar, definir a capa, reordenar e remover. A primeira é a capa.
 - A foto aparece na landing, na `/loja` e na miniatura do painel, com o **nome do produto** como texto alternativo. Sem foto, o bloco rosa continua.
 - O navegador só confere o tipo para responder rápido; quem decide é o servidor, pelo **conteúdo** do arquivo. O nome é gerado pelo servidor.
 - As fotos são servidas pela API e chegam pelo proxy do site (`/api/uploads/...`), então funcionam em qualquer domínio.
@@ -92,6 +101,15 @@ Login, lista de produtos, cadastro, ocultar/mostrar na loja e ajuste de estoque 
   de tentativas de login vira global (um atacante travaria o dono). Veja o `.env.example` da API.
 - O dono é criado na API: `go run ./cmd/createadmin -email ...` (não existe cadastro público).
 
+## Vitrine, página do produto e galeria
+
+- **Landing:** "Coleções em destaque" e "Em alta agora" só aparecem com **4 ou mais produtos** (`MIN_PRODUCTS_FOR_SECTIONS` em `lib/landing.ts`). Com menos, a vitrine já mostra os produtos.
+- **Hero:** a cada carregamento sorteia um produto **com foto** (foto, nome e link para a página do produto). Sem produto com foto, mantém o bloco rosa.
+- **"Em alta agora"** é um carrossel que desliza com o dedo, o mouse (arrastar) e as setas, sem repetir produto.
+- **`/loja/[slug]`:** página do produto com galeria, preço, estoque e sacola. Slug inexistente ou produto oculto → 404. API fora do ar → estado de erro (nunca um 404 falso).
+- **Galeria no painel:** até 8 fotos por produto; a primeira é a capa. Os cards da landing, da `/loja` e do "Em alta" levam à página do produto.
+- Movimento: entrada suave das páginas e cards em cascata; `prefers-reduced-motion` desliga tudo.
+
 ## Estrutura
 
 - `app/` — rotas (`/` landing, `/loja` listagem da API) e `globals.css` com os tokens do design system.
@@ -104,6 +122,7 @@ Login, lista de produtos, cadastro, ocultar/mostrar na loja e ajuste de estoque 
 ## Pendências antes de publicar
 
 - Fotos reais (os blocos rosa-claro dizem qual foto entra em cada lugar).
-- Preços (`R$ [PREÇO]`), WhatsApp e Instagram em `lib/site.ts`.
-- Newsletter ainda não envia para nenhum provedor (`components/Newsletter.tsx`).
-- Loja: falta sacola, tamanho e finalização pelo WhatsApp (F1). Painel: não iniciado.
+- Newsletter ainda não envia para nenhum provedor (`components/Newsletter.tsx`, `onSubscribe`).
+- Acompanhamento do pedido na tela (`/sacola`): o endpoint `POST /v1/orders/lookup` já existe na API.
+- Tamanho e cor dos produtos: fora do escopo atual (produto simples, sem variantes).
+- Verificação completa no navegador da vitrine (plano em `docs/superpowers/plans/2026-11-19-vitrine-detalhe-animacoes.md`, Task 7).

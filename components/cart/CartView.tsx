@@ -1,26 +1,32 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
+import { useId, useRef, useState, type FormEvent } from "react";
 import { ApiError, apiRequest } from "@/lib/admin";
 import { formatPrice, type ApiOrder } from "@/lib/api";
 import { cartCount, subtotalCents, toOrderRequest } from "@/lib/cart";
 import { orderMessage } from "@/lib/order-message";
-import { whatsappTarget } from "@/lib/sellers";
+import { formatPhone } from "@/lib/phone-mask";
+import { checkoutWhatsAppHref } from "@/lib/sellers";
 import { EmptyState } from "../EmptyState";
 import { useSellers } from "../SellersProvider";
 import { useSettings } from "../SettingsProvider";
-import { WhatsAppCta } from "../WhatsAppCta";
 import { WhatsAppIcon } from "../icons";
 import { useCart } from "./CartProvider";
 
 export function CartView() {
   const { cart, ready, setQty, remove, clear } = useCart();
+  const sellers = useSellers();
+  const site = useSettings();
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
-  const [placed, setPlaced] = useState<ApiOrder | null>(null);
+  const [placed, setPlaced] = useState<{ order: ApiOrder; whatsappHref: string | null } | null>(null);
+  const [phone, setPhone] = useState("");
+  const formRef = useRef<HTMLFormElement>(null);
+  const picker = useRef<HTMLDialogElement>(null);
+  const pickerTitle = useId();
 
-  if (placed) return <Confirmation order={placed} />;
+  if (placed) return <Confirmation order={placed.order} whatsappHref={placed.whatsappHref} />;
   if (!ready) return <p className="muted" aria-busy="true">Carregando sua sacola…</p>;
 
   if (cart.items.length === 0) {
@@ -37,10 +43,16 @@ export function CartView() {
     );
   }
 
-  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  /**
+   * Cria o pedido e leva o cliente ao WhatsApp da vendedora `sellerId`.
+   * Precisa ser chamada direto de um clique: a aba do WhatsApp só abre (sem bloqueio) dentro do gesto do usuário.
+   */
+  async function placeOrder(form: HTMLFormElement, sellerId: string) {
     if (sending) return; // evita pedido em duplicidade por duplo clique
-    const form = new FormData(e.currentTarget);
+    const data = new FormData(form);
+    const popup = window.open("", "_blank");
+    if (popup) popup.opener = null;
+
     setSending(true);
     setError("");
     try {
@@ -48,18 +60,40 @@ export function CartView() {
         "POST",
         "/v1/orders",
         toOrderRequest(cart, {
-          name: form.get("name")?.toString() ?? "",
-          phone: form.get("phone")?.toString() ?? "",
-          neighborhood: form.get("neighborhood")?.toString() ?? "",
+          name: data.get("name")?.toString() ?? "",
+          phone: data.get("phone")?.toString() ?? "",
+          neighborhood: data.get("neighborhood")?.toString() ?? "",
         }),
       );
       clear();
-      setPlaced(order);
+      const href = checkoutWhatsAppHref(sellers, site, orderMessage(order), sellerId);
+      const whatsappHref = href.startsWith("https://wa.me/") ? href : null;
+      if (popup) {
+        if (whatsappHref) popup.location.href = whatsappHref;
+        else popup.close();
+      }
+      setPlaced({ order, whatsappHref });
     } catch (err) {
+      popup?.close();
       setError(err instanceof ApiError ? err.message : "Algo deu errado. Tente novamente.");
     } finally {
       setSending(false);
     }
+  }
+
+  // "Fechar pedido" só dispara o submit depois que os campos obrigatórios estão válidos.
+  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (sellers.length >= 2) {
+      picker.current?.showModal(); // 2+ vendedoras: o cliente escolhe antes de enviar
+      return;
+    }
+    void placeOrder(e.currentTarget, sellers[0]?.id ?? "");
+  }
+
+  function chooseSeller(sellerId: string) {
+    picker.current?.close();
+    if (formRef.current) void placeOrder(formRef.current, sellerId);
   }
 
   return (
@@ -102,14 +136,14 @@ export function CartView() {
         <h2 id="dados" className="admin-panel__title">
           Seus dados
         </h2>
-        <form className="admin-form" onSubmit={handleSubmit}>
+        <form ref={formRef} className="admin-form" onSubmit={handleSubmit}>
           <div className="field">
             <label htmlFor="name">Nome</label>
             <input id="name" name="name" required minLength={2} maxLength={100} autoComplete="name" />
           </div>
           <div className="field">
             <label htmlFor="phone">WhatsApp / telefone com DDD</label>
-            <input id="phone" name="phone" required inputMode="tel" autoComplete="tel" placeholder="(83) 99999-1234" />
+            <input id="phone" name="phone" required inputMode="tel" autoComplete="tel" placeholder="(83) 99999-1234" maxLength={15} value={phone} onChange={(e) => setPhone(formatPhone(e.target.value))} />
           </div>
           <div className="field">
             <label htmlFor="neighborhood">Bairro</label>
@@ -123,16 +157,41 @@ export function CartView() {
           </p>
         </form>
       </section>
+
+      {/* Escolha de vendedora: só aparece com 2+ cadastradas. <dialog> nativo cuida do foco, do Esc e do fundo. */}
+      <dialog
+        ref={picker}
+        className="picker"
+        aria-labelledby={pickerTitle}
+        onClick={(e) => {
+          if (e.target === picker.current) picker.current?.close(); // clique no fundo escurecido
+        }}
+      >
+        <div className="picker__box">
+          <h2 id={pickerTitle} className="display picker__title">
+            Com quem você quer falar?
+          </h2>
+          <p className="muted">Escolha uma vendedora. O seu pedido vai direto para o WhatsApp dela.</p>
+          <ul className="picker__list">
+            {sellers.map((s) => (
+              <li key={s.id}>
+                <button type="button" className="picker__item" onClick={() => chooseSeller(s.id)}>
+                  <span className="picker__name">{s.name}</span>
+                  <span className="picker__num">{s.whatsapp_display}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+          <button type="button" className="btn btn--outline" onClick={() => picker.current?.close()}>
+            Cancelar
+          </button>
+        </div>
+      </dialog>
     </div>
   );
 }
 
-function Confirmation({ order }: { order: ApiOrder }) {
-  const site = useSettings();
-  const sellers = useSellers();
-  const message = orderMessage(order);
-  const canWhatsApp = whatsappTarget(sellers, site, message).kind !== "none";
-
+function Confirmation({ order, whatsappHref }: { order: ApiOrder; whatsappHref: string | null }) {
   return (
     <div className="admin-panel confirm">
       <span className="pill pill--azul">Pedido recebido</span>
@@ -157,10 +216,13 @@ function Confirmation({ order }: { order: ApiOrder }) {
       </p>
 
       <div className="hero__ctas">
-        {canWhatsApp ? (
-          <WhatsAppCta message={message} className="btn btn--lg btn--tinta">
-            <WhatsAppIcon /> Enviar pedido pelo WhatsApp
-          </WhatsAppCta>
+        {whatsappHref ? (
+          <>
+            <p className="muted">O WhatsApp abriu em outra aba com o seu pedido. Se não abriu, use o botão abaixo.</p>
+            <a href={whatsappHref} className="btn btn--lg btn--tinta" target="_blank" rel="noopener noreferrer">
+              <WhatsAppIcon /> Abrir o WhatsApp com o pedido
+            </a>
+          </>
         ) : (
           <p className="muted">A loja vai entrar em contato pelo telefone que você informou para combinar pagamento e entrega.</p>
         )}

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { defaultSettings, type StoreSettings } from "./settings";
-import { getSellers, normalizeAdminSellers, normalizeSellers, sellerHref, whatsappTarget, type Seller } from "./sellers";
+import { checkoutWhatsAppHref, getSellers, normalizeAdminSellers, normalizeSellers, sellerHref, whatsappTarget, type Seller } from "./sellers";
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -99,5 +99,24 @@ describe("getSellers", () => {
   ])("%s: sem vendedoras (o site cai no contato geral e continua de pé)", async (_n, impl) => {
     vi.stubGlobal("fetch", vi.fn(impl));
     expect(await getSellers()).toEqual([]);
+  });
+});
+
+describe("checkoutWhatsAppHref: a vendedora escolhida no checkout", () => {
+  it("usa a vendedora escolhida, mesmo havendo outra na lista", () => {
+    expect(checkoutWhatsAppHref([ana, bia], withContact, "oi", bia.id)).toBe("https://wa.me/5583988887766?text=oi");
+  });
+
+  it("escolha que não existe (ou vazia) cai na primeira vendedora ativa", () => {
+    expect(checkoutWhatsAppHref([ana, bia], withContact, "oi", "nao-existe")).toBe("https://wa.me/5583999991234?text=oi");
+    expect(checkoutWhatsAppHref([ana, bia], withContact, "oi", "")).toBe("https://wa.me/5583999991234?text=oi");
+  });
+
+  it("sem vendedora, vai para o WhatsApp de contato da loja", () => {
+    expect(checkoutWhatsAppHref([], withContact, "oi", "")).toBe("https://wa.me/5583911112222?text=oi");
+  });
+
+  it("sem nenhum WhatsApp configurado, usa a âncora de contato", () => {
+    expect(checkoutWhatsAppHref([], defaultSettings, "oi", "")).toBe("#contato");
   });
 });

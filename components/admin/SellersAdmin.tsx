@@ -1,13 +1,19 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useState, type ChangeEvent, type FormEvent } from "react";
 import { revalidateSite } from "@/app/admin/actions";
 import { ApiError, apiRequest } from "@/lib/admin";
 import { MAX_SELLERS, type AdminSeller } from "@/lib/sellers";
+import { formatPhone } from "@/lib/phone-mask";
 import { EmptyState } from "../EmptyState";
 
 type Message = { kind: "ok" | "error"; text: string };
+
+/** Campos de telefone sem estado React: formata o valor digitado no próprio input. */
+const maskPhone = (e: ChangeEvent<HTMLInputElement>) => {
+  e.target.value = formatPhone(e.target.value);
+};
 
 export function SellersAdmin({ sellers }: { sellers: AdminSeller[] }) {
   const router = useRouter();
@@ -96,7 +102,7 @@ export function SellersAdmin({ sellers }: { sellers: AdminSeller[] }) {
           </div>
           <div className="field">
             <label htmlFor="new-whatsapp">WhatsApp</label>
-            <input id="new-whatsapp" name="whatsapp" required inputMode="tel" autoComplete="off" placeholder="(83) 99999-1234" />
+            <input id="new-whatsapp" name="whatsapp" required inputMode="tel" autoComplete="off" placeholder="(83) 99999-1234" maxLength={15} onChange={maskPhone} />
           </div>
           <button type="submit" className="btn btn--tinta" disabled={busy === "create" || sellers.length >= MAX_SELLERS}>
             {busy === "create" ? "Salvando…" : "Cadastrar"}
@@ -159,7 +165,7 @@ export function SellersAdmin({ sellers }: { sellers: AdminSeller[] }) {
                   </div>
                   <div className="field">
                     <label htmlFor={`w-${s.id}`}>WhatsApp</label>
-                    <input id={`w-${s.id}`} name="whatsapp" required inputMode="tel" defaultValue={s.whatsapp_display} />
+                    <input id={`w-${s.id}`} name="whatsapp" required inputMode="tel" maxLength={15} defaultValue={s.whatsapp_display} onChange={maskPhone} />
                   </div>
                   <button type="submit" className="btn btn--tinta" disabled={busy === s.id}>
                     Salvar

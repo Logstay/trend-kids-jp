@@ -6,7 +6,7 @@ import { CartButton } from "./cart/CartButton";
 import { HomeLink } from "./HomeLink";
 import { NavLink } from "./NavLink";
 import { ShopMenu, ShopMenuArrow } from "./ShopMenu";
-import { SearchIcon } from "./icons";
+import { HeaderSearch } from "./HeaderSearch";
 
 export function Header() {
   return (
@@ -37,9 +37,7 @@ export function Header() {
         ))}
       </nav>
       <div className="header__actions">
-        <Link href="/loja" className="icon-btn" aria-label="Buscar na loja">
-          <SearchIcon />
-        </Link>
+        <HeaderSearch />
         <CartButton />
       </div>
     </header>

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { revalidateSite } from "@/app/admin/actions";
 import { ApiError, apiRequest } from "@/lib/admin";
+import { formatPhone } from "@/lib/phone-mask";
 import type { StoreSettings } from "@/lib/settings";
 
 type Message = { kind: "ok" | "error"; text: string };
@@ -73,14 +74,14 @@ export function SettingsForm({ initial }: { initial: StoreSettings }) {
         </div>
         <div className="field">
           <label htmlFor="whatsapp">WhatsApp de contato</label>
-          <input id="whatsapp" inputMode="tel" autoComplete="off" placeholder="(83) 99999-1234" value={form.whatsapp} onChange={set("whatsapp")} aria-describedby="whatsapp-help" />
+          <input id="whatsapp" inputMode="tel" autoComplete="off" placeholder="(83) 99999-1234" value={form.whatsapp} onChange={(e) => setForm((f) => ({ ...f, whatsapp: formatPhone(e.target.value) }))} maxLength={15} aria-describedby="whatsapp-help" />
           <small id="whatsapp-help" className="field__help">
             Atendimento geral da loja: aparece no rodapé e é usado quando não há vendedora ativa. Os números das vendedoras ficam na aba Vendedoras.
           </small>
         </div>
         <div className="field">
           <label htmlFor="phone">Telefone (opcional)</label>
-          <input id="phone" inputMode="tel" autoComplete="off" placeholder="(83) 3222-1234" value={form.phone} onChange={set("phone")} />
+          <input id="phone" inputMode="tel" autoComplete="off" placeholder="(83) 3222-1234" value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: formatPhone(e.target.value) }))} maxLength={15} />
         </div>
         <div className="field">
           <label htmlFor="instagram">Instagram (opcional)</label>

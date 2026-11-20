@@ -6,7 +6,7 @@ import { ApiError, adminRequest, parsePriceToCents, putBodyFrom } from "@/lib/ad
 import { EmptyState } from "@/components/EmptyState";
 import { AdminNav } from "./AdminNav";
 import { formatPrice, type ApiProduct } from "@/lib/api";
-import { MAX_IMAGES, imageSrc, makeCover, moveKey, planUploads, removeProductImage, reorderProductImages, uploadProductImages, validateImageFile } from "@/lib/media";
+import { MAX_IMAGES, imageSrc, makeCover, moveKey, planUploads, removeProductImage, reorderProductImages, uploadProductImages } from "@/lib/media";
 
 const CATEGORIES = ["Classic", "Com luz", "Sandálias", "Forrados", "Charms"] as const;
 const REASONS = ["Reposição", "Venda no balcão", "Devolução", "Correção de contagem", "Perda ou avaria"] as const;
@@ -24,10 +24,11 @@ export function AdminProducts({ products }: { products: ApiProduct[] }) {
   // Painéis de fotos abertos, por id de produto: sobrevive ao router.refresh (o id não muda).
   const [galleryOpen, setGalleryOpen] = useState<ReadonlySet<string>>(new Set());
   const createForm = useRef<HTMLFormElement>(null);
-  const [preview, setPreview] = useState<string | null>(null);
+  // Fotos escolhidas no formulário de novo produto (até MAX_IMAGES), com a pré-visualização de cada uma.
+  const [picked, setPicked] = useState<{ file: File; url: string }[]>([]);
 
-  // Libera a memória da pré-visualização quando ela troca ou o componente sai.
-  useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
+  // Libera a memória das pré-visualizações quando a lista troca ou o componente sai.
+  useEffect(() => () => { picked.forEach((p) => URL.revokeObjectURL(p.url)); }, [picked]);
 
   /** Executa uma ação da API: trata sessão expirada, mostra o resultado e recarrega a lista. */
   async function run(key: string, action: () => Promise<unknown>, okText: string): Promise<boolean> {
@@ -63,15 +64,8 @@ export function AdminProducts({ products }: { products: ApiProduct[] }) {
       setMessage({ kind: "error", text: "Estoque inicial deve ser um número inteiro, zero ou mais." });
       return;
     }
-    const picked = form.get("image");
-    const file = picked instanceof File && picked.size > 0 ? picked : null;
-    if (file) {
-      const problem = validateImageFile(file);
-      if (problem) {
-        setMessage({ kind: "error", text: problem });
-        return;
-      }
-    }
+    // As fotos já foram conferidas ao escolher (handlePick); aqui só são enviadas depois que o produto existe.
+    const files = picked.map((p) => p.file);
 
     setBusy("create");
     setMessage(null);
@@ -85,20 +79,22 @@ export function AdminProducts({ products }: { products: ApiProduct[] }) {
       });
 
       let result: Message = { kind: "ok", text: "Produto criado." };
-      if (file) {
-        // O produto já existe. Se só a foto falhar, o produto NÃO se perde: avisa e a foto pode ser reenviada pela lista.
-        const out = await uploadProductImages(created.id, [file]);
+      if (files.length > 0) {
+        // O produto já existe. Se alguma foto falhar, o produto NÃO se perde: avisa e as fotos podem ser reenviadas pela lista.
+        const out = await uploadProductImages(created.id, files);
         if (out.unauthorized) {
           router.replace("/admin/login");
           return;
         }
+        const n = files.length;
         result = out.failed.length === 0
-          ? { kind: "ok", text: "Produto criado com foto." }
-          : { kind: "error", text: `Produto criado, mas a foto não foi enviada: ${out.failed[0].message}. Use "Fotos" na lista para enviar de novo.` };
+          ? { kind: "ok", text: n === 1 ? "Produto criado com foto." : `Produto criado com ${n} fotos.` }
+          : { kind: "error", text: `Produto criado, mas ${out.failed.length} de ${n} foto(s) não foram enviadas: ${out.failed[0].message}. Use "Fotos" na lista para enviar de novo.` };
       }
       setMessage(result);
       createForm.current?.reset();
-      setPreview(null);
+      picked.forEach((p) => URL.revokeObjectURL(p.url));
+      setPicked([]);
       startTransition(() => router.refresh());
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
@@ -111,22 +107,21 @@ export function AdminProducts({ products }: { products: ApiProduct[] }) {
     }
   }
 
-  /** Escolheu uma foto no formulário de novo produto: confere e mostra a pré-visualização. */
+  /** Escolheu fotos no formulário de novo produto: confere cada uma (tipo, tamanho, limite) e mostra as pré-visualizações. */
   function handlePick(e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) {
-      setPreview(null);
-      return;
+    const files = Array.from(e.target.files ?? []);
+    e.target.value = ""; // permite escolher o mesmo arquivo de novo depois
+    if (files.length === 0) return;
+    const { accepted, problems } = planUploads(files, picked.length);
+    setMessage(problems.length > 0 ? { kind: "error", text: problems.join(" ") } : null);
+    if (accepted.length > 0) {
+      setPicked((prev) => [...prev, ...accepted.map((file) => ({ file, url: URL.createObjectURL(file) }))]);
     }
-    const problem = validateImageFile(file);
-    if (problem) {
-      setMessage({ kind: "error", text: problem });
-      e.target.value = "";
-      setPreview(null);
-      return;
-    }
-    setMessage(null);
-    setPreview(URL.createObjectURL(file));
+  }
+
+  function clearPicked() {
+    picked.forEach((p) => URL.revokeObjectURL(p.url));
+    setPicked([]);
   }
 
   function toggleGallery(id: string) {
@@ -245,12 +240,23 @@ export function AdminProducts({ products }: { products: ApiProduct[] }) {
             <input id="description" name="description" maxLength={500} />
           </div>
           <div className="field field--wide">
-            <label htmlFor="image">Foto do produto</label>
-            <input id="image" name="image" type="file" accept="image/jpeg,image/png,image/webp" onChange={handlePick} aria-describedby="image-help" />
+            <label htmlFor="image">Fotos do produto</label>
+            <input id="image" name="image" type="file" multiple accept="image/jpeg,image/png,image/webp" onChange={handlePick} aria-describedby="image-help" />
             <small id="image-help" className="field__help">
-              JPEG, PNG ou WebP, até 5 MB. Sem foto, o produto aparece na loja com um bloco rosa no lugar.
+              Até {MAX_IMAGES} fotos, JPEG, PNG ou WebP, até 5 MB cada. A primeira é a capa. Sem foto, o produto aparece na loja com um bloco rosa no lugar.
             </small>
-            {preview && <img className="photo-preview" src={preview} alt="Pré-visualização da foto escolhida" />}
+            {picked.length > 0 && (
+              <>
+                <div className="photo-previews">
+                  {picked.map((p, i) => (
+                    <img key={p.url} className="photo-preview" src={p.url} alt={`Pré-visualização da foto ${i + 1}${i === 0 ? " (capa)" : ""}`} />
+                  ))}
+                </div>
+                <button type="button" className="link-btn" onClick={clearPicked}>
+                  Limpar fotos ({picked.length})
+                </button>
+              </>
+            )}
           </div>
           <button type="submit" className="btn btn--tinta" disabled={busy === "create"}>
             {busy === "create" ? "Salvando…" : "Criar produto"}
