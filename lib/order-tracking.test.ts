@@ -54,6 +54,14 @@ describe("normalizeOrderCode", () => {
   it("remove espaços e põe em maiúsculas", () => {
     expect(normalizeOrderCode("  tkabcd2345 ")).toBe("TKABCD2345");
   });
+
+  it("remove tab e quebra de linha nas bordas", () => {
+    expect(normalizeOrderCode("\ttkabcd2345\n")).toBe("TKABCD2345");
+  });
+
+  it("mantém código já normalizado", () => {
+    expect(normalizeOrderCode("TKABCD2345")).toBe("TKABCD2345");
+  });
 });
 
 describe("isValidOrderCode", () => {
@@ -61,13 +69,35 @@ describe("isValidOrderCode", () => {
     expect(isValidOrderCode("TKABCD2345")).toBe(true);
   });
 
+  it("aceita código bruto só depois de normalizado", () => {
+    expect(isValidOrderCode(normalizeOrderCode("  tkabcd2345 "))).toBe(true);
+  });
+
+  it("recusa código não normalizado (minúsculas ou espaços nas bordas)", () => {
+    expect(isValidOrderCode("tkabcd2345")).toBe(false);
+    expect(isValidOrderCode(" TKABCD2345")).toBe(false);
+    expect(isValidOrderCode("TKABCD2345 ")).toBe(false);
+  });
+
   it("rejeita código com tamanho errado", () => {
     expect(isValidOrderCode("TKABCD234")).toBe(false);
     expect(isValidOrderCode("TKABCD23450")).toBe(false);
   });
 
-  it("rejeita caracteres fora do alfabeto (0, O, I, L, 1) e prefixo errado", () => {
-    expect(isValidOrderCode("TK0OIL1234")).toBe(false);
+  it("rejeita cada caractere proibido (0, O, I, L, 1)", () => {
+    expect(isValidOrderCode("TK0BCD2345")).toBe(false);
+    expect(isValidOrderCode("TKABCD234O")).toBe(false);
+    expect(isValidOrderCode("TKABCD23I5")).toBe(false);
+    expect(isValidOrderCode("TKABCD2L45")).toBe(false);
+    expect(isValidOrderCode("TKABCD1345")).toBe(false);
+  });
+
+  it("rejeita caracteres não alfanuméricos e quebra de linha no fim", () => {
+    expect(isValidOrderCode("TKABCD23-5")).toBe(false);
+    expect(isValidOrderCode("TKABCD2345\n")).toBe(false);
+  });
+
+  it("rejeita prefixo errado", () => {
     expect(isValidOrderCode("XXABCD2345")).toBe(false);
   });
 
